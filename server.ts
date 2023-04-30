@@ -3,6 +3,7 @@ const express = require("express");
 import { Request, Response } from "express";
 import { QueryResult } from "pg";
 const Joi = require("joi");
+const pg = require("pg");
 
 // Create a new express application
 const app = express();
@@ -17,8 +18,6 @@ const schema = Joi.object({
   username: Joi.string().alphanum().min(3).max(30).required(),
   age: Joi.number().integer().min(18).max(150),
 });
-
-const pg = require("pg");
 
 // Create a new Pool object
 const pool = new pg.Pool({
