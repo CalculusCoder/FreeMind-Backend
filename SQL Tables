@@ -1,0 +1,6 @@
+ALTER TABLE IF EXISTS "Freemind".users
+	ADD COLUMN ID BIGSERIAL PRIMARY KEY NOT NULL,
+    ADD COLUMN Email character varying(30) NOT NULL,
+	ADD COLUMN Password character varying(30) NOT NULL,
+	ADD COLUMN FristName character varying(30) NOT NULL,
+	ADD COLUMN LastName character varying(30) NOT NULL;

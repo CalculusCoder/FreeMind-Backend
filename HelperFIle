@@ -1,0 +1,9 @@
+In the terminal Go to the directory of the API file. 
+Run the file with:
+    node index.js
+    CTRL + C to stop listening
+
+To run Nodemon
+    npm run devstart
+
+If location of main API file changes or file name change, if you want to run nodemon you need to updat the script with the new folder and file name
