@@ -1,8 +1,8 @@
 export {};
 export const db = {
-  user: 'postgres',
-  password: 'root',
-  database: 'postgres',
-  host: 'localhost',
+  user: "postgres",
+  password: "Emanuel12",
+  database: "postgres",
+  host: "localhost",
   port: 5432,
 };
