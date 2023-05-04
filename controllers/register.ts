@@ -3,6 +3,7 @@ import { Pool, QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 import * as Yup from "yup";
 const bcrypt = require("bcrypt");
+import jwt from "jsonwebtoken";
 
 const userSchema = Yup.object().shape({
   firstName: Yup.string().required(),
@@ -27,10 +28,27 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
     queryDB(QueryStatement, (err: Error, result: QueryResult) => {
       if (err) {
         console.error(err);
-        res.status(500).json({ error: "Registration Faile" });
+        if (
+          err.message.includes(
+            'duplicate key value violates unique constraint "users_email_key"'
+          )
+        ) {
+          return res.status(400).json({
+            error:
+              "Email address already registered. Sign in or use a different email",
+          });
+        } else {
+          return res.status(500).json({ error: "Registration Failed" });
+        }
       } else {
-        console.log("User registered successfully");
-        res.json({ message: "Registration successful" });
+        const token = jwt.sign(
+          { email },
+          process.env.JWT_SECRET || "jwtsecret3101",
+          { expiresIn: "10m" }
+        );
+
+        console.log("User registered successfully", token);
+        res.json({ message: "Registration successful", token });
       }
     });
   } catch (error) {
@@ -40,25 +58,3 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
 }
 
 export { registerHandler };
-
-// userSchema
-//   .validate({ firstName, lastName, email, password })
-//   .then(() => {
-//     const QueryStatement = {
-//       text: 'INSERT INTO "Freemind".users (Email, firstName, LastName, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
-//       values: [email, firstName, lastName, password],
-//     };
-//     queryDB(QueryStatement, (err: Error, result: QueryResult) => {
-//       if (err) {
-//         console.error("Database query error", err);
-//         res.status(500).json({ error: "Registration Failed" });
-//       } else {
-//         console.log("User registered successfully");
-//         res.json({ message: "Registration successful" });
-//       }
-//     });
-//   })
-//   .catch((error: any) => {
-//     console.error("Validation error", error);
-//     res.status(400).json({ error: "Validation error" });
-//   });
