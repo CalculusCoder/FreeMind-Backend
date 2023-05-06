@@ -1,8 +1,5 @@
 import { Response } from "express";
 import { ExtendedRequest } from "../types";
-import { Pool, QueryResult, QueryConfig } from "pg";
-import { db } from "../configuration/config";
-import { queryDB } from "../db/db";
 import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
 
 const Stripe = require("stripe");
@@ -26,7 +23,7 @@ async function verifyJwtToken(
 }
 
 async function paymentHandler(req: ExtendedRequest, res: Response) {
-  let { amount, id } = req.body;
+  const { id, plan } = req.body;
   let userEmail;
 
   if (!req.token) {
@@ -48,41 +45,51 @@ async function paymentHandler(req: ExtendedRequest, res: Response) {
   }
 
   try {
-    const payment = await stripe.paymentIntents.create({
-      amount,
-      currency: "USD",
-      description: "FreeMind Membership",
-      payment_method: id,
-      confirm: true,
+    // Check if the customer already exists
+    const customers = await stripe.customers.list({ email: userEmail });
+    let customerId;
+
+    if (customers.data.length === 0) {
+      // Create a new customer if not found
+      const customer = await stripe.customers.create({
+        email: userEmail,
+        payment_method: id,
+        invoice_settings: {
+          default_payment_method: id,
+        },
+      });
+
+      customerId = customer.id;
+    } else {
+      customerId = customers.data[0].id;
+
+      // Update the customer's default payment method
+      await stripe.customers.update(customerId, {
+        invoice_settings: {
+          default_payment_method: id,
+        },
+      });
+    }
+
+    // Create a subscription for the customer
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [
+        {
+          price: plan, // Use the plan ID received from the frontend
+        },
+      ],
+      expand: ["latest_invoice.payment_intent"],
     });
 
-    const updateMembershipStatusQuery = {
-      text: 'UPDATE "Freemind".users SET ismember=true WHERE email=$1',
-      values: [userEmail],
-    };
-
-    queryDB(updateMembershipStatusQuery, (err: Error, result: QueryResult) => {
-      if (err) {
-        console.error("Database query error", err);
-        return res
-          .status(500)
-          .json({ error: "Failed to update membership status" });
-      }
-
-      if (result.rowCount === 0) {
-        console.error("No user found with the given email");
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      console.log("Payment", payment);
-      res.json({
-        message: "Payment Successful",
-      });
+    console.log("Subscription", subscription);
+    res.json({
+      message: "Subscription Successful",
     });
   } catch (error) {
     console.log("Error", error);
     res.json({
-      message: "Payment Failed",
+      message: "Subscription Failed",
     });
   }
 }
