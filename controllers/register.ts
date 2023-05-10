@@ -41,14 +41,8 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
           return res.status(500).json({ error: "Registration Failed" });
         }
       } else {
-        const token = jwt.sign(
-          { email },
-          process.env.JWT_SECRET || "jwtsecret3101",
-          { expiresIn: "10m" }
-        );
-
-        console.log("User registered successfully", token);
-        res.json({ message: "Registration successful", token });
+        console.log("User registered successfully");
+        res.json({ message: "Registration successful" });
       }
     });
   } catch (error) {

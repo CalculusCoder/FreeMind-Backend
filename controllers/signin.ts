@@ -1,14 +1,16 @@
 import { Request, Response } from "express";
 import { queryDB } from "../db/db";
 const bcrypt = require("bcrypt");
+import jwt from "jsonwebtoken";
 
 function loginHandler(req: Request, res: Response) {
   const { email, password } = req.body;
   console.log("Received request:", req.body);
 
   try {
+    // Update the SQL query to select user without checking isMember
     const QueryStatement = {
-      text: 'SELECT * FROM "Freemind".users WHERE email = $1 AND ismember = true',
+      text: 'SELECT * FROM "Freemind".users WHERE email = $1',
       values: [email],
     };
 
@@ -42,5 +44,4 @@ function loginHandler(req: Request, res: Response) {
     res.status(500).send("Error occurred");
   }
 }
-
 export { loginHandler };
