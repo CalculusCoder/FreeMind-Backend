@@ -14,7 +14,10 @@ if (port == null || port == "") {
 }
 
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: [
+    "http://localhost:3000",
+    "https://anxiety-recovery-frontend.vercel.app",
+  ],
   credentials: true,
 };
 
