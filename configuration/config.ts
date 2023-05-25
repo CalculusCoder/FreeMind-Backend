@@ -1,8 +1,12 @@
 export {};
 export const db = {
-  user: "postgres",
-  password: "Emanuel12",
-  database: "postgres",
-  host: "localhost",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  // user: "postgres",
+  // password: "Emanuel12",
+  // database: "postgres",
+  // host: "localhost",
+  // port: 5432,
 };
