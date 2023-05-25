@@ -3,13 +3,9 @@ import { ExtendedRequest } from "./types";
 import { Pool, QueryResult, QueryConfig } from "pg";
 import { db } from "./configuration/config";
 import { queryDB } from "./db/db";
-import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
-import cron from "node-cron";
 
 const Stripe = require("stripe");
-const stripe = Stripe(
-  "sk_test_51N2mV6EmHzDZeH6XTSPQBXH7EfYoEP5AbkWpPrShqfdnUBIWnMUMevMYpwtFDJb38yvzNbyloxhyWrDcn0qz1pG200b4X2ShKF"
-);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 async function webhookHandler(req: ExtendedRequest, res: Response) {
   const stripeSignature = req.headers["stripe-signature"] as string;
@@ -19,7 +15,7 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
     event = stripe.webhooks.constructEvent(
       req.rawBody,
       stripeSignature,
-      "whsec_cD2Z0ZYpDGD1qeEVDlR2jRzDQNBRYzTs"
+      process.env.STRIPE_WEBHOOK_SIGNATURE
     );
   } catch (err) {
     console.log(`Error: ${err}`);

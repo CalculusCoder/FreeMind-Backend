@@ -1,14 +1,12 @@
 import { Request, Response } from "express";
 import { queryDB } from "../db/db";
 const bcrypt = require("bcrypt");
-import jwt from "jsonwebtoken";
 
 function loginHandler(req: Request, res: Response) {
   const { email, password } = req.body;
   console.log("Received request:", req.body);
 
   try {
-    // Update the SQL query to select user without checking isMember
     const QueryStatement = {
       text: 'SELECT * FROM "Freemind".users WHERE email = $1',
       values: [email],
@@ -28,6 +26,9 @@ function loginHandler(req: Request, res: Response) {
             res.json({
               id: user.id,
               email: user.email,
+              username: user.username,
+              profile_pic_id: user.profile_pic_id,
+              stripe_customer_id: user.stripe_customer_id,
             });
           } else {
             console.log("Invalid Email or Password");

@@ -9,7 +9,7 @@ async function getAllCommentsHandler(
   const { postId } = req.params;
 
   const getCommentsQuery = {
-    text: `SELECT * FROM "Freemind".comments WHERE PostID = $1`,
+    text: `SELECT comments.*, users.username, users.profile_pic_id FROM "Freemind".comments JOIN "Freemind".users ON comments.userid = users.id WHERE comments.postid = $1 ORDER BY comments.commenttimestamp DESC`,
     values: [postId],
   };
 

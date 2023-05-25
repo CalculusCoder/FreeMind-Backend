@@ -5,14 +5,18 @@ import { queryDB } from "../db/db";
 async function getAllPostsHandler(req: Request, res: Response): Promise<void> {
   const { topicId } = req.params;
 
-  // Validate inputs here...
-  //Please remember to add some validation for the inputs before
-  //inserting them into the database to avoid SQL Injection attacks and
-  //ensure the integrity of your data.
+  const page = parseInt(req.query.page as string) || 0;
+  const pageSize = parseInt(req.query.pageSize as string) || 30;
 
   const getPostsQuery = {
-    text: `SELECT * FROM "Freemind".posts WHERE TopicID = $1`,
-    values: [topicId],
+    text: `
+      SELECT posts.*, users.username, users.profile_pic_id 
+      FROM "Freemind".posts 
+      JOIN "Freemind".users ON posts.UserId = users.id 
+      WHERE posts.TopicID = $1 
+      ORDER BY posts.posttimestamp DESC
+      LIMIT $2 OFFSET $3`,
+    values: [topicId, pageSize, page * pageSize],
   };
 
   queryDB(getPostsQuery, (err: Error, result: QueryResult) => {

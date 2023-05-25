@@ -3,26 +3,32 @@ import { Pool, QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 import * as Yup from "yup";
 const bcrypt = require("bcrypt");
-import jwt from "jsonwebtoken";
 
 const userSchema = Yup.object().shape({
-  firstName: Yup.string().required(),
-  lastName: Yup.string().required(),
+  fullName: Yup.string().required(),
+  forumUserName: Yup.string()
+    .min(5, "Username must be at least 5 characters")
+    .required("Username Required"),
   email: Yup.string().required().email(),
   password: Yup.string().required().min(7).matches(/[0-9]/).matches(/[A-Z]/),
 });
 
 async function registerHandler(req: Request, res: Response): Promise<void> {
-  const { firstName, lastName, email, password } = req.body;
+  const { fullName, forumUserName, email, password } = req.body;
 
   try {
-    await userSchema.validate({ firstName, lastName, email, password });
+    await userSchema.validate({
+      fullName,
+      forumUserName,
+      email,
+      password,
+    });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const QueryStatement: QueryConfig = {
-      text: 'INSERT INTO "Freemind".users (Email, firstName, LastName, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
-      values: [email, firstName, lastName, hashedPassword],
+      text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
+      values: [email, fullName, forumUserName, hashedPassword],
     };
 
     queryDB(QueryStatement, (err: Error, result: QueryResult) => {
@@ -36,6 +42,14 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
           return res.status(400).json({
             error:
               "Email address already registered. Sign in or use a different email",
+          });
+        } else if (
+          err.message.includes(
+            'duplicate key value violates unique constraint "users_UserName_key"'
+          )
+        ) {
+          return res.status(401).json({
+            error: "Username already exists. Please use a different username",
           });
         } else {
           return res.status(500).json({ error: "Registration Failed" });

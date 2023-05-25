@@ -5,13 +5,8 @@ import { queryDB } from "../db/db";
 async function getUserPost(req: Request, res: Response): Promise<void> {
   const { topicId, postId } = req.params;
 
-  // Validate inputs here...
-  //Please remember to add some validation for the inputs before
-  //inserting them into the database to avoid SQL Injection attacks and
-  //ensure the integrity of your data.
-
   const getPostsQuery = {
-    text: `SELECT * FROM "Freemind".posts WHERE TopicID = $1 AND PostID = $2`,
+    text: `SELECT posts.*, users.username, users.profile_pic_id FROM "Freemind".posts JOIN "Freemind".users ON posts.userid = users.id WHERE posts.topicid = $1 AND posts.postid = $2`,
     values: [topicId, postId],
   };
 

@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { Pool, QueryResult, QueryConfig } from "pg";
+import { QueryResult } from "pg";
 import { queryDB } from "../db/db";
-const bcrypt = require("bcrypt");
 
 async function checkMembership(req: Request, res: Response): Promise<void> {
   const { email } = req.body;

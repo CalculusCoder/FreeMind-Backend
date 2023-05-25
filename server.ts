@@ -1,4 +1,5 @@
 import express from "express";
+require("dotenv").config();
 import { router } from "./routes/routes";
 import { connectDB } from "./db/db";
 import cors from "cors";

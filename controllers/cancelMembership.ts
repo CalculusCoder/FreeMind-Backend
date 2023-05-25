@@ -3,9 +3,7 @@ import { queryDB } from "../db/db";
 import { QueryResult } from "pg";
 
 const Stripe = require("stripe");
-const stripe = Stripe(
-  "sk_test_51N2mV6EmHzDZeH6XTSPQBXH7EfYoEP5AbkWpPrShqfdnUBIWnMUMevMYpwtFDJb38yvzNbyloxhyWrDcn0qz1pG200b4X2ShKF"
-);
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 async function cancelSubscription(req: Request, res: Response) {
   const { userEmail } = req.body;
@@ -19,7 +17,7 @@ async function cancelSubscription(req: Request, res: Response) {
     const customers = await stripe.customers.list({ email: userEmail });
 
     if (customers.data.length === 0) {
-      return res.status(404).json({ message: "Customer not found" });
+      return res.status(403).json({ message: "Customer not found" });
     }
 
     const customerId = customers.data[0].id;
