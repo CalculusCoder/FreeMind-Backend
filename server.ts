@@ -8,7 +8,10 @@ import { ExtendedRequest } from "./types";
 import { Buffer } from "buffer";
 
 const app = express();
-const port = 5000;
+let port: number | string | undefined = process.env.PORT;
+if (port == null || port == "") {
+  port = 5000;
+}
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -31,6 +34,4 @@ app.use("/", router);
 
 connectDB();
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
-});
+app.listen(port);
