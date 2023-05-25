@@ -1,4 +1,4 @@
-import express from "express";
+const express = require("express");
 require("dotenv").config();
 import { router } from "./routes/routes";
 import { connectDB } from "./db/db";
@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   express.json({
     limit: "5mb",
-    verify: (req: ExtendedRequest, res, buf: Buffer) => {
+    verify: (req: ExtendedRequest, res: any, buf: Buffer) => {
       req.rawBody = buf.toString();
     },
   })
