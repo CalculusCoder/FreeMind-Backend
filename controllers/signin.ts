@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 
 function loginHandler(req: Request, res: Response) {
   const { email, password } = req.body;
-  console.log("Received request:", req.body);
 
   try {
     const QueryStatement = {
@@ -22,7 +21,6 @@ function loginHandler(req: Request, res: Response) {
           const isMatch = await bcrypt.compare(password, user.password);
 
           if (isMatch) {
-            console.log("User authentication successful");
             res.json({
               id: user.id,
               email: user.email,

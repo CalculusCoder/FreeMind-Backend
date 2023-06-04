@@ -2,9 +2,7 @@
 // export {};
 // export const db = {
 //   connectionString: process.env.DATABASE_URL,
-//   ssl: {
-//     rejectUnauthorized: false,
-//   },
+//   ssl: false,
 //   user: "postgres",
 //   password: "Emanuel12",
 //   database: "postgres",

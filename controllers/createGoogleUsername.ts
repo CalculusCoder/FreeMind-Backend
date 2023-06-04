@@ -14,7 +14,6 @@ async function createGoogleUsername(
   res: Response
 ): Promise<void> {
   const { email, forumUserName } = req.body;
-  console.log(email, forumUserName);
 
   try {
     await userSchema.validate({
@@ -32,10 +31,9 @@ async function createGoogleUsername(
         console.error(err);
         if (
           err.message.includes(
-            'duplicate key value violates unique constraint "users_ForumUserName_key"'
+            'duplicate key value violates unique constraint "users_UserName_key"'
           )
         ) {
-          // Return a specific error message if the username already exists
           return res.status(400).json({
             error: "Username already exists. Please choose a different one.",
           });

@@ -43,7 +43,6 @@ const userSchema = Yup.object().shape({
 function createGoogleUsername(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { email, forumUserName } = req.body;
-        console.log(email, forumUserName);
         try {
             yield userSchema.validate({
                 forumUserName,
@@ -56,8 +55,7 @@ function createGoogleUsername(req, res) {
             (0, db_1.queryDB)(QueryStatement, (err, result) => {
                 if (err) {
                     console.error(err);
-                    if (err.message.includes('duplicate key value violates unique constraint "users_ForumUserName_key"')) {
-                        // Return a specific error message if the username already exists
+                    if (err.message.includes('duplicate key value violates unique constraint "users_UserName_key"')) {
                         return res.status(400).json({
                             error: "Username already exists. Please choose a different one.",
                         });

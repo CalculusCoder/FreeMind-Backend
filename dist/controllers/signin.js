@@ -14,7 +14,6 @@ const db_1 = require("../db/db");
 const bcrypt = require("bcrypt");
 function loginHandler(req, res) {
     const { email, password } = req.body;
-    console.log("Received request:", req.body);
     try {
         const QueryStatement = {
             text: 'SELECT * FROM "Freemind".users WHERE email = $1',
@@ -30,7 +29,6 @@ function loginHandler(req, res) {
                     const user = result.rows[0];
                     const isMatch = yield bcrypt.compare(password, user.password);
                     if (isMatch) {
-                        console.log("User authentication successful");
                         res.json({
                             id: user.id,
                             email: user.email,
