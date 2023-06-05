@@ -23,6 +23,8 @@ import { checkGoogleRegistration } from "../controllers/checkGoogleRegistration"
 import { registerGoogleUser } from "../controllers/registerGoogleUser";
 import { createGoogleUsername } from "../controllers/createGoogleUsername";
 import { getAdditionalDataHandler } from "../controllers/getAdditionalData";
+import { resetPassword } from "../controllers/resetPassword";
+import { checkTokenResetPassword } from "../controllers/checkTokenResetPassword";
 const router = express.Router();
 
 router.post("/Signin", loginHandler);
@@ -50,6 +52,8 @@ router.get("/isRegistered/", checkGoogleRegistration);
 router.post("/Register/Google", registerGoogleUser);
 router.post("/Register/Username", createGoogleUsername);
 router.get("/getUser", getAdditionalDataHandler);
+router.post("/reset-password", resetPassword);
+router.post("/check-token-reset-password", checkTokenResetPassword);
 router.post(
   "/webhook",
   express.raw({ type: "application/json" }),
