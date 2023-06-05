@@ -59,7 +59,7 @@ async function resetPassword(req: Request, res: Response): Promise<void> {
           to: email,
           subject: "Password Reset Request",
           text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
-          http://localhost:3000/Home/ResetPassword?token=${resetToken}`,
+          https://anxiety-recovery-frontend.vercel.app/Home/ResetPassword?token=${resetToken}`,
         };
 
         let info = await transporter.sendMail(mailOptions);
