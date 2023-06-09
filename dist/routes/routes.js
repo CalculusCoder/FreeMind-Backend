@@ -30,6 +30,7 @@ const createGoogleUsername_1 = require("../controllers/createGoogleUsername");
 const getAdditionalData_1 = require("../controllers/getAdditionalData");
 const resetPassword_1 = require("../controllers/resetPassword");
 const checkTokenResetPassword_1 = require("../controllers/checkTokenResetPassword");
+const getSubscriptionStatus_1 = require("../controllers/getSubscriptionStatus");
 const router = express_1.default.Router();
 exports.router = router;
 router.post("/Signin", signin_1.loginHandler);
@@ -56,6 +57,7 @@ router.post("/Register/Username", createGoogleUsername_1.createGoogleUsername);
 router.get("/getUser", getAdditionalData_1.getAdditionalDataHandler);
 router.post("/reset-password", resetPassword_1.resetPassword);
 router.post("/check-token-reset-password", checkTokenResetPassword_1.checkTokenResetPassword);
+router.post("/GetSubscriptionStatus", getSubscriptionStatus_1.getSubscriptionStatus);
 router.post("/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhookHandler);
 // Post Related Endpoints:
 //DONE GET /topics/{topicId}/posts - Get all posts for a specific topic
