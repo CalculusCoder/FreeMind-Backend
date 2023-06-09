@@ -34,6 +34,8 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
     const customer = await stripe.customers.retrieve(customerId);
     const userEmail = customer.email;
     const newExpirationDate = new Date(subscription.current_period_end * 1000);
+newExpirationDate.setHours(newExpirationDate.getHours() + 1);
+
 
     const updateMembershipStatusQuery = {
       text: 'UPDATE "Freemind".users stripe_customer_id=$2, access_expiration=$3 WHERE email=$1',
@@ -60,6 +62,8 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
       event.data.object.subscription
     );
     const newExpirationDate = new Date(subscription.current_period_end * 1000);
+newExpirationDate.setHours(newExpirationDate.getHours() + 1);
+
 
     const updateMembershipStatusQuery = {
       text: 'UPDATE "Freemind".users SET stripe_customer_id=$2, access_expiration=$3 WHERE email=$1',
