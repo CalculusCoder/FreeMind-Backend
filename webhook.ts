@@ -22,6 +22,7 @@ const transport = nodemailer.createTransport({
 async function sendReceiptEmail(userEmail: string, receipt: any) {
   const filePath = path.join(__dirname, '/views/receipt.ejs');
   const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
+  console.log(receipt);
 
   const mailOptions = {
     from: process.env.EMAIL_USERNAME,
@@ -89,6 +90,8 @@ newExpirationDate.setHours(newExpirationDate.getHours() + 1);
 
     const userEmail = invoice.customer_email;
     const customerId = invoice.customer;
+
+    sendReceiptEmail(userEmail, invoice);
 
     const subscription = await stripe.subscriptions.retrieve(
       event.data.object.subscription
