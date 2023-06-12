@@ -22,6 +22,7 @@ const corsOptions = {
     credentials: true,
 };
 app.use((0, cors_1.default)(corsOptions));
+app.options('*', (0, cors_1.default)(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({
     limit: "5mb",
