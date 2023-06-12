@@ -20,14 +20,16 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-const transport = nodemailer_1.default.createTransport({
-    service: "Gmail",
+let transport = nodemailer_1.default.createTransport({
+    service: 'gmail',
     auth: {
+        type: 'OAuth2',
         user: process.env.GOOGLE_EMAIL,
-        pass: process.env.GOOGLE_PASSWORD
-    }
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+    },
 });
-console.log(process.env.GOOGLE_EMAIL, process.env.GOOGLE_PASSWORD);
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, 'views/receipt.ejs');

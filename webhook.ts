@@ -11,15 +11,17 @@ import path from 'path';
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const transport = nodemailer.createTransport({
-  service: "Gmail",
-  auth: {
-    user: process.env.GOOGLE_EMAIL,
-    pass: process.env.GOOGLE_PASSWORD
-  }
-})
 
-console.log(process.env.GOOGLE_EMAIL, process.env.GOOGLE_PASSWORD);
+let transport = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+      type: 'OAuth2',
+      user: process.env.GOOGLE_EMAIL,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+  },
+});
 
 
 async function sendReceiptEmail(userEmail: string, receipt: any) {
