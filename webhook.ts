@@ -20,7 +20,7 @@ const transport = nodemailer.createTransport({
 })
 
 async function sendReceiptEmail(userEmail: string, receipt: any) {
-  const filePath = path.join(__dirname, '/views/receipt.ejs');
+  const filePath = path.join(__dirname, './views/receipt.ejs');
   const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
   console.log(receipt);
   console.log(filePath);
