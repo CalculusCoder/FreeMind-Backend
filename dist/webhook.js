@@ -31,6 +31,8 @@ function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, '/views/receipt.ejs');
         const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, 'utf8'));
+        console.log(receipt);
+        console.log(filePath);
         const mailOptions = {
             from: process.env.EMAIL_USERNAME,
             to: userEmail,
@@ -86,6 +88,7 @@ function webhookHandler(req, res) {
             console.log("Invoice payment was successful:", invoice.id);
             const userEmail = invoice.customer_email;
             const customerId = invoice.customer;
+            sendReceiptEmail(userEmail, invoice);
             const subscription = yield stripe.subscriptions.retrieve(event.data.object.subscription);
             const newExpirationDate = new Date(subscription.current_period_end * 1000);
             newExpirationDate.setHours(newExpirationDate.getHours() + 1);
