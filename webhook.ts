@@ -3,9 +3,41 @@ import { ExtendedRequest } from "./types";
 import { Pool, QueryResult, QueryConfig } from "pg";
 import { db } from "./configuration/config";
 import { queryDB } from "./db/db";
+import nodemailer from "nodemailer";
+import ejs from 'ejs';
+import fs from 'fs';
+import path from 'path';
 
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+const transport = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: process.env.GOOGLE_EMAIL,
+    pass: process.env.GOOGLE_PASSWORD
+  }
+})
+
+async function sendReceiptEmail(userEmail: string, receipt: any) {
+  const filePath = path.join(__dirname, '/views/receipt.ejs');
+  const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
+
+  const mailOptions = {
+    from: process.env.EMAIL_USERNAME,
+    to: userEmail,
+    subject: 'Your Receipt',
+    html: compiled({ receipt: receipt }) // pass data to template
+  };
+
+  return transport.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log('Message sent: %s', info.messageId);
+  });
+}
+
 
 async function webhookHandler(req: ExtendedRequest, res: Response) {
   const stripeSignature = req.headers["stripe-signature"] as string;
@@ -25,6 +57,7 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
     console.log("PaymentIntent was successful:", paymentIntent.id);
+
   } else if (event.type === "customer.subscription.created") {
     const subscription = event.data.object;
     console.log("Subscription created:", subscription.id);
@@ -58,9 +91,12 @@ newExpirationDate.setHours(newExpirationDate.getHours() + 1);
     const userEmail = invoice.customer_email;
     const customerId = invoice.customer;
 
+    sendReceiptEmail(userEmail, invoice);
+
     const subscription = await stripe.subscriptions.retrieve(
       event.data.object.subscription
     );
+    
     const newExpirationDate = new Date(subscription.current_period_end * 1000);
 newExpirationDate.setHours(newExpirationDate.getHours() + 1);
 
