@@ -3,6 +3,7 @@ import { QueryResult } from "pg";
 import { queryDB } from "../db/db";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer from "nodemailer";
+import { error } from "console";
 
 function queryDBPromise(query: any): Promise<QueryResult> {
   return new Promise((resolve, reject) => {
@@ -57,7 +58,6 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
           clientId: process.env.GOOGLE_CLIENT_ID,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-          accessToken: "Your-Access-Token",
         },
       });
 
@@ -81,7 +81,7 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error", message: error });
   }
 }
 
