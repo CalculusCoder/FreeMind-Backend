@@ -27,6 +27,7 @@ const transport = nodemailer_1.default.createTransport({
         pass: process.env.GOOGLE_PASSWORD
     }
 });
+console.log(process.env.GOOGLE_EMAIL, process.env.GOOGLE_PASSWORD);
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, 'views/receipt.ejs');

@@ -19,6 +19,9 @@ const transport = nodemailer.createTransport({
   }
 })
 
+console.log(process.env.GOOGLE_EMAIL, process.env.GOOGLE_PASSWORD);
+
+
 async function sendReceiptEmail(userEmail: string, receipt: any) {
   const filePath = path.join(__dirname, 'views/receipt.ejs');
   const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
