@@ -29,7 +29,7 @@ const transport = nodemailer_1.default.createTransport({
 });
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filePath = path_1.default.join(__dirname, '/views/receipt.ejs');
+        const filePath = path_1.default.join(__dirname, './views/receipt.ejs');
         const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, 'utf8'));
         console.log(receipt);
         console.log(filePath);
