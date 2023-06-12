@@ -11,34 +11,34 @@ import path from 'path';
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const transport = nodemailer.createTransport({
-  service: "Gmail",
-  auth: {
-    user: process.env.GOOGLE_EMAIL,
-    pass: process.env.GOOGLE_PASSWORD
-  }
-})
+// const transport = nodemailer.createTransport({
+//   service: "Gmail",
+//   auth: {
+//     user: process.env.GOOGLE_EMAIL,
+//     pass: process.env.GOOGLE_PASSWORD
+//   }
+// })
 
-async function sendReceiptEmail(userEmail: string, receipt: any) {
-  const filePath = path.join(__dirname, 'views/receipt.ejs');
-  const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
-  console.log(filePath);
+// async function sendReceiptEmail(userEmail: string, receipt: any) {
+//   const filePath = path.join(__dirname, 'views/receipt.ejs');
+//   const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
+//   console.log(filePath);
 
 
-  const mailOptions = {
-    from: process.env.EMAIL_USERNAME,
-    to: userEmail,
-    subject: 'Your Receipt',
-    html: compiled({ receipt: receipt }) // pass data to template
-  };
+//   const mailOptions = {
+//     from: process.env.EMAIL_USERNAME,
+//     to: userEmail,
+//     subject: 'Your Receipt',
+//     html: compiled({ receipt: receipt }) // pass data to template
+//   };
 
-  return transport.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.log(error);
-    }
-    console.log('Message sent: %s', info.messageId);
-  });
-}
+//   return transport.sendMail(mailOptions, (error, info) => {
+//     if (error) {
+//       return console.log(error);
+//     }
+//     console.log('Message sent: %s', info.messageId);
+//   });
+// }
 
 
 async function webhookHandler(req: ExtendedRequest, res: Response) {
@@ -92,7 +92,7 @@ newExpirationDate.setHours(newExpirationDate.getHours() + 1);
     const userEmail = invoice.customer_email;
     const customerId = invoice.customer;
 
-    sendReceiptEmail(userEmail, invoice);
+    // sendReceiptEmail(userEmail, invoice);
 
     const subscription = await stripe.subscriptions.retrieve(
       event.data.object.subscription
