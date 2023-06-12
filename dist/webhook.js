@@ -86,7 +86,6 @@ function webhookHandler(req, res) {
             console.log("Invoice payment was successful:", invoice.id);
             const userEmail = invoice.customer_email;
             const customerId = invoice.customer;
-            sendReceiptEmail(userEmail, invoice);
             const subscription = yield stripe.subscriptions.retrieve(event.data.object.subscription);
             const newExpirationDate = new Date(subscription.current_period_end * 1000);
             newExpirationDate.setHours(newExpirationDate.getHours() + 1);

@@ -57,7 +57,6 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
     console.log("PaymentIntent was successful:", paymentIntent.id);
-
   } else if (event.type === "customer.subscription.created") {
     const subscription = event.data.object;
     console.log("Subscription created:", subscription.id);
@@ -91,12 +90,9 @@ newExpirationDate.setHours(newExpirationDate.getHours() + 1);
     const userEmail = invoice.customer_email;
     const customerId = invoice.customer;
 
-    sendReceiptEmail(userEmail, invoice);
-
     const subscription = await stripe.subscriptions.retrieve(
       event.data.object.subscription
     );
-    
     const newExpirationDate = new Date(subscription.current_period_end * 1000);
 newExpirationDate.setHours(newExpirationDate.getHours() + 1);
 
