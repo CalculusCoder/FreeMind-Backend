@@ -3,6 +3,7 @@ import { QueryResult } from "pg";
 import { queryDB } from "../db/db";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer from "nodemailer";
+import sgMail from '@sendgrid/mail';
 import { error } from "console";
 
 function queryDBPromise(query: any): Promise<QueryResult> {
@@ -49,34 +50,38 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
         return res.status(500).json({ error: "Internal Server Error" });
       }
 
-      // Send email with reset link
-      let transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          type: "OAuth2",
-          user: process.env.GOOGLE_EMAIL,
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        },
-      });
+      
+  if (!process.env.GOOGLE_EMAIL) {
+    throw new Error('EMAIL_USERNAME is not defined');
+  }
 
-      let mailOptions = {
-        from: process.env.GOOGLE_EMAIL,
-        to: email,
-        subject: "Password Reset Request",
-        text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
-        https://freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
-      };
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error('SENDGRID_API_KEY is not defined');
+  }
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-      let info = await transporter.sendMail(mailOptions);
+  const msg = {
+    to: email,
+    from: process.env.GOOGLE_EMAIL,
+    subject: "Password Reset Request",
+    text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
+    https://freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
+  };
 
-      return res.status(200).json({
-        message:
-          "You will receive a password recovery link to your email shortly",
-      });
+  return sgMail.send(msg)
+  .then(() => {
+    console.log('Email sent');
+    return res.status(200).json({
+      message:
+        "You will receive a password recovery link to your email shortly",
+    });
+  })
+  .catch((error) => {
+    console.error(error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  });
 
-    } else {
+} else {
       return res.status(400).json({ error: "Email does not exist." });
     }
   } catch (err) {
