@@ -7,42 +7,63 @@ import nodemailer from "nodemailer";
 import ejs from 'ejs';
 import fs from 'fs';
 import path from 'path';
+import sgMail from '@sendgrid/mail';
 
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+if (!process.env.SENDGRID_API_KEY) {
+  throw new Error('SENDGRID_API_KEY is not defined');
+}
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 
-let transport = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-      type: 'OAuth2',
-      user: process.env.GOOGLE_EMAIL,
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-  },
-});
+
+// let transport = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//       type: 'OAuth2',
+//       user: process.env.GOOGLE_EMAIL,
+//       clientId: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//       refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+//   },
+// });
 
 
 async function sendReceiptEmail(userEmail: string, receipt: any) {
   const filePath = path.join(__dirname, 'views/receipt.ejs');
   const compiled = ejs.compile(fs.readFileSync(filePath, 'utf8'));
-  console.log(filePath);
 
+  if (!process.env.GOOGLE_EMAIL) {
+    throw new Error('EMAIL_USERNAME is not defined');
+  }
+ 
 
-  const mailOptions = {
-    from: process.env.EMAIL_USERNAME,
+  const msg = {
     to: userEmail,
+    from: process.env.GOOGLE_EMAIL, 
     subject: 'Your Receipt',
-    html: compiled({ receipt: receipt }) // pass data to template
+    html: compiled({ receipt: receipt }),
   };
 
-  return transport.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.log(error);
-    }
-    console.log('Message sent: %s', info.messageId);
-  });
+  return sgMail.send(msg)
+  .then(() => console.log('Email sent'))
+  .catch((error) => console.log(error.message));
+
+
+  // const mailOptions = {
+  //   from: process.env.EMAIL_USERNAME,
+  //   to: userEmail,
+  //   subject: 'Your Receipt',
+  //   html: compiled({ receipt: receipt }) // pass data to template
+  // };
+
+  // return transport.sendMail(mailOptions, (error, info) => {
+  //   if (error) {
+  //     return console.log(error);
+  //   }
+  //   console.log('Message sent: %s', info.messageId);
+  // });
 }
 
 

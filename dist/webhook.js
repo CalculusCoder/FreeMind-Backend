@@ -14,39 +14,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.webhookHandler = void 0;
 const db_1 = require("./db/db");
-const nodemailer_1 = __importDefault(require("nodemailer"));
 const ejs_1 = __importDefault(require("ejs"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-let transport = nodemailer_1.default.createTransport({
-    service: 'gmail',
-    auth: {
-        type: 'OAuth2',
-        user: process.env.GOOGLE_EMAIL,
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-    },
-});
+if (!process.env.SENDGRID_API_KEY) {
+    throw new Error('SENDGRID_API_KEY is not defined');
+}
+mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
+// let transport = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//       type: 'OAuth2',
+//       user: process.env.GOOGLE_EMAIL,
+//       clientId: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//       refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+//   },
+// });
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, 'views/receipt.ejs');
         const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, 'utf8'));
-        console.log(filePath);
-        const mailOptions = {
-            from: process.env.EMAIL_USERNAME,
+        if (!process.env.GOOGLE_EMAIL) {
+            throw new Error('EMAIL_USERNAME is not defined');
+        }
+        const msg = {
             to: userEmail,
+            from: process.env.GOOGLE_EMAIL,
             subject: 'Your Receipt',
-            html: compiled({ receipt: receipt }) // pass data to template
+            html: compiled({ receipt: receipt }),
         };
-        return transport.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                return console.log(error);
-            }
-            console.log('Message sent: %s', info.messageId);
-        });
+        return mail_1.default.send(msg)
+            .then(() => console.log('Email sent'))
+            .catch((error) => console.log(error.message));
+        // const mailOptions = {
+        //   from: process.env.EMAIL_USERNAME,
+        //   to: userEmail,
+        //   subject: 'Your Receipt',
+        //   html: compiled({ receipt: receipt }) // pass data to template
+        // };
+        // return transport.sendMail(mailOptions, (error, info) => {
+        //   if (error) {
+        //     return console.log(error);
+        //   }
+        //   console.log('Message sent: %s', info.messageId);
+        // });
     });
 }
 function webhookHandler(req, res) {
