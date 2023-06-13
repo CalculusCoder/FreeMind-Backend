@@ -9,16 +9,16 @@
 
     <table>
         <tr>
-            <td>Receipt Number:</td>
-            <td><%= receipt.receipt_number %></td>
+            <td>Invoice Number:</td>
+            <td><%= receipt.number %></td>
         </tr>
         <tr>
             <td>Date:</td>
-            <td><%= new Date(receipt.date * 1000).toLocaleDateString() %></td>
+            <td><%= new Date(receipt.created * 1000).toLocaleDateString() %></td>
         </tr>
         <tr>
             <td>Description:</td>
-            <td><%= receipt.description %></td>
+            <td><%= receipt.lines.data[0].description %></td>
         </tr>
         <tr>
             <td>Amount Paid:</td>
