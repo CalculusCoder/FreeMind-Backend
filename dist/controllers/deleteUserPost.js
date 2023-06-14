@@ -34,7 +34,7 @@ function deleteUserPost(req, res) {
             }
             else {
                 const post = postResult.rows[0];
-                if (post.userid !== userId && userId !== "158") {
+                if (post.userid !== userId && userId !== "21") {
                     res
                         .status(403)
                         .json({ error: "User not authorized to delete this post" });
