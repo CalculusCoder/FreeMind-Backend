@@ -27,7 +27,7 @@ async function deleteCommentHandler(
       return;
     } else {
       const comment = result.rows[0];
-      if (comment.userid !== userId && userId !== "158") {
+      if (comment.userid !== userId && userId !== "21") {
         res
           .status(403)
           .json({ error: "User not authorized to delete this comment" });
