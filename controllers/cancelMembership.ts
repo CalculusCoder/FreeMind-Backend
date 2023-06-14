@@ -1,6 +1,4 @@
 import { Request, Response } from "express";
-import { queryDB } from "../db/db";
-import { QueryResult } from "pg";
 
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
