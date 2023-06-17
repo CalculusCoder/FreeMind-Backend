@@ -6,6 +6,13 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ExtendedRequest } from "./types";
 import { Buffer } from "buffer";
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "https://8ff1c5c6cea94a11b73c6ee0ab172eca@o4505376459128832.ingest.sentry.io/4505376459128832",
+
+  tracesSampleRate: 1.0,
+});
 
 const app = express();
 let port: number | string | undefined = process.env.PORT;
@@ -14,10 +21,7 @@ if (port == null || port == "") {
 }
 
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "https://freemindrecovery.com",
-  ],
+  origin: ["http://localhost:3000", "https://freemindrecovery.com"],
   credentials: true,
 };
 
