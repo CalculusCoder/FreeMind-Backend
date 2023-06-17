@@ -21,7 +21,7 @@ const mail_1 = __importDefault(require("@sendgrid/mail"));
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 if (!process.env.SENDGRID_API_KEY) {
-    throw new Error('SENDGRID_API_KEY is not defined');
+    throw new Error("SENDGRID_API_KEY is not defined");
 }
 mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 // let transport = nodemailer.createTransport({
@@ -36,19 +36,20 @@ mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 // });
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
-        const filePath = path_1.default.join(__dirname, 'views/receipt.ejs');
-        const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, 'utf8'));
+        const filePath = path_1.default.join(__dirname, "views/receipt.ejs");
+        const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, "utf8"));
         if (!process.env.GOOGLE_EMAIL) {
-            throw new Error('EMAIL_USERNAME is not defined');
+            throw new Error("EMAIL_USERNAME is not defined");
         }
         const msg = {
             to: userEmail,
             from: process.env.GOOGLE_EMAIL,
-            subject: 'Your Receipt',
+            subject: "Your Receipt",
             html: compiled({ receipt: receipt }),
         };
-        return mail_1.default.send(msg)
-            .then(() => console.log('Email sent'))
+        return mail_1.default
+            .send(msg)
+            .then(() => console.log("Email sent"))
             .catch((error) => console.log(error.message));
         // const mailOptions = {
         //   from: process.env.EMAIL_USERNAME,

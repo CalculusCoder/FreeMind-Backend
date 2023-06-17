@@ -31,14 +31,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerGoogleUser = void 0;
 const db_1 = require("../db/db");
 const Yup = __importStar(require("yup"));
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 const userSchema = Yup.object().shape({
     email: Yup.string().required().email(),
     fullName: Yup.string().required(),
 });
+if (!process.env.SENDGRID_API_KEY || !process.env.GOOGLE_EMAIL) {
+    throw new Error("SENDGRID_API_KEY or GOOGLE_EMAIL is not defined");
+}
+mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 function registerGoogleUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { email, fullName } = req.body;
@@ -51,7 +59,7 @@ function registerGoogleUser(req, res) {
                 text: `INSERT INTO "Freemind".users (Email, fullName) VALUES ($1::text, $2::text) RETURNING id, email, fullName, profile_pic_id`,
                 values: [email, fullName],
             };
-            (0, db_1.queryDB)(QueryStatement, (err, result) => {
+            (0, db_1.queryDB)(QueryStatement, (err, result) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
                     console.error(err);
                     if (err.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
@@ -63,10 +71,25 @@ function registerGoogleUser(req, res) {
                         return res.status(500).json({ error: "Registration Failed" });
                     }
                 }
-                const user = result.rows[0];
-                console.log(user);
-                res.status(200).json({ user, message: "User registered successfully" });
-            });
+                else {
+                    const user = result.rows[0];
+                    console.log(user);
+                    const msg = {
+                        to: "jaredgomez0812@gmail.com",
+                        from: process.env.GOOGLE_EMAIL,
+                        subject: "New Google User Registration",
+                        text: `A new user has registered with Google. Details: ${JSON.stringify(user)}`,
+                    };
+                    try {
+                        yield mail_1.default.send(msg);
+                        console.log("Email sent");
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
+                    res.status(200).json({ user, message: "User registered successfully" });
+                }
+            }));
         }
         catch (error) {
             console.log(error);

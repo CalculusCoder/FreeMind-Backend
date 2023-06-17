@@ -31,11 +31,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerHandler = void 0;
 const db_1 = require("../db/db");
 const Yup = __importStar(require("yup"));
 const bcrypt = require("bcrypt");
+const mail_1 = __importDefault(require("@sendgrid/mail"));
 const userSchema = Yup.object().shape({
     fullName: Yup.string().required(),
     forumUserName: Yup.string()
@@ -44,6 +48,10 @@ const userSchema = Yup.object().shape({
     email: Yup.string().required().email(),
     password: Yup.string().required().min(7).matches(/[0-9]/).matches(/[A-Z]/),
 });
+if (!process.env.SENDGRID_API_KEY || !process.env.GOOGLE_EMAIL) {
+    throw new Error("SENDGRID_API_KEY or GOOGLE_EMAIL is not defined");
+}
+mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 function registerHandler(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { fullName, forumUserName, email, password } = req.body;
@@ -59,7 +67,7 @@ function registerHandler(req, res) {
                 text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
                 values: [email, fullName, forumUserName, hashedPassword],
             };
-            (0, db_1.queryDB)(QueryStatement, (err, result) => {
+            (0, db_1.queryDB)(QueryStatement, (err, result) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
                     console.error(err);
                     if (err.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
@@ -78,9 +86,25 @@ function registerHandler(req, res) {
                 }
                 else {
                     console.log("User registered successfully");
+                    const msg = {
+                        to: "jaredgomez0812@gmail.com",
+                        from: process.env.GOOGLE_EMAIL,
+                        subject: "New User Registration",
+                        text: `A new user has registered. Details: ${JSON.stringify({
+                            fullName,
+                            email,
+                        })}`,
+                    };
+                    try {
+                        yield mail_1.default.send(msg);
+                        console.log("Email sent");
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
                     res.json({ message: "Registration successful" });
                 }
-            });
+            }));
         }
         catch (error) {
             console.error("Validation error", error);

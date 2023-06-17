@@ -20,13 +20,18 @@ function loginHandler(req, res) {
             values: [email],
         };
         (0, db_1.queryDB)(QueryStatement, (err, result) => __awaiter(this, void 0, void 0, function* () {
-            if (err) {
-                console.error("Database query error", err);
-                res.status(500).json({ error: "Database query error" });
-            }
-            else {
+            try {
+                if (err) {
+                    console.error("Database query error", err);
+                    res.status(500).json({ error: "Database query error" });
+                }
                 if (result.rows.length > 0) {
                     const user = result.rows[0];
+                    if (user.password === null) {
+                        return res.status(401).json({
+                            error: "User used Google authentication to register. Please sign in with Google.",
+                        });
+                    }
                     const isMatch = yield bcrypt.compare(password, user.password);
                     if (isMatch) {
                         res.json({
@@ -46,6 +51,10 @@ function loginHandler(req, res) {
                     console.log("Invalid Email or Password");
                     res.status(404).json({ error: "Invalid Email or Password" });
                 }
+            }
+            catch (innerError) {
+                console.error("Error occurred inside callback", innerError);
+                return res.status(500).send("Error occurred");
             }
         }));
     }
