@@ -28,7 +28,7 @@ function loginHandler(req, res) {
                 if (result.rows.length > 0) {
                     const user = result.rows[0];
                     if (user.password === null) {
-                        return res.status(401).json({
+                        return res.status(402).json({
                             error: "User used Google authentication to register. Please sign in with Google.",
                         });
                     }
