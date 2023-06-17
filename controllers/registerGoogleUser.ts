@@ -2,11 +2,17 @@ import { Request, Response, query } from "express";
 import { queryDB } from "../db/db";
 import * as Yup from "yup";
 import { QueryConfig, QueryResult } from "pg";
+import sgMail from "@sendgrid/mail";
 
 const userSchema = Yup.object().shape({
   email: Yup.string().required().email(),
   fullName: Yup.string().required(),
 });
+
+if (!process.env.SENDGRID_API_KEY || !process.env.GOOGLE_EMAIL) {
+  throw new Error("SENDGRID_API_KEY or GOOGLE_EMAIL is not defined");
+}
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function registerGoogleUser(req: Request, res: Response): Promise<void> {
   const { email, fullName } = req.body;
@@ -22,7 +28,7 @@ async function registerGoogleUser(req: Request, res: Response): Promise<void> {
       values: [email, fullName],
     };
 
-    queryDB(QueryStatement, (err: Error, result: QueryResult) => {
+    queryDB(QueryStatement, async (err: Error, result: QueryResult) => {
       if (err) {
         console.error(err);
         if (
@@ -37,11 +43,26 @@ async function registerGoogleUser(req: Request, res: Response): Promise<void> {
         } else {
           return res.status(500).json({ error: "Registration Failed" });
         }
-      }
+      } else {
+        const user = result.rows[0];
+        console.log(user);
+        const msg = {
+          to: "jaredgomez0812@gmail.com",
+          from: process.env.GOOGLE_EMAIL as string,
+          subject: "New Google User Registration",
+          text: `A new user has registered with Google. Details: ${JSON.stringify(
+            user
+          )}`,
+        };
 
-      const user = result.rows[0];
-      console.log(user);
-      res.status(200).json({ user, message: "User registered successfully" });
+        try {
+          await sgMail.send(msg);
+          console.log("Email sent");
+        } catch (error) {
+          console.log(error);
+        }
+        res.status(200).json({ user, message: "User registered successfully" });
+      }
     });
   } catch (error) {
     console.log(error);
