@@ -26,6 +26,7 @@ import { getAdditionalDataHandler } from "../controllers/getAdditionalData";
 import { resetPassword } from "../controllers/resetPassword";
 import { checkTokenResetPassword } from "../controllers/checkTokenResetPassword";
 import { getSubscriptionStatus } from "../controllers/getSubscriptionStatus";
+import { getCompletion } from "../controllers/openAIAPI";
 const router = express.Router();
 
 router.post("/Signin", loginHandler);
@@ -55,7 +56,8 @@ router.post("/Register/Username", createGoogleUsername);
 router.get("/getUser", getAdditionalDataHandler);
 router.post("/reset-password", resetPassword);
 router.post("/check-token-reset-password", checkTokenResetPassword);
-router.post("/GetSubscriptionStatus", getSubscriptionStatus)
+router.post("/GetSubscriptionStatus", getSubscriptionStatus);
+router.post("/Api-Chat", getCompletion);
 router.post(
   "/webhook",
   express.raw({ type: "application/json" }),

@@ -33,6 +33,7 @@ const db_1 = require("./db/db");
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const Sentry = __importStar(require("@sentry/node"));
+require("./controllers/resetAPIUsage");
 Sentry.init({
     dsn: "https://8ff1c5c6cea94a11b73c6ee0ab172eca@o4505376459128832.ingest.sentry.io/4505376459128832",
     tracesSampleRate: 1.0,

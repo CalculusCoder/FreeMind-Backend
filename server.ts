@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { ExtendedRequest } from "./types";
 import { Buffer } from "buffer";
 import * as Sentry from "@sentry/node";
+import "./controllers/resetAPIUsage";
 
 Sentry.init({
   dsn: "https://8ff1c5c6cea94a11b73c6ee0ab172eca@o4505376459128832.ingest.sentry.io/4505376459128832",
