@@ -23,7 +23,7 @@ async function getCompletion(req: Request, res: Response) {
       return;
     }
 
-    if (!result.rows[0] || result.rows[0].chatbot_uses >= 10) {
+    if (!result.rows[0] || result.rows[0].chatbot_uses >= 8) {
       res.status(403).send("Daily limit of chatbot usage reached");
       return;
     }
