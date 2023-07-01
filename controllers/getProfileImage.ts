@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { QueryResult } from "pg";
+import { QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 import * as yup from "yup";
 
@@ -15,17 +15,13 @@ async function getProfileImage(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const getImage = {
+  const getImage: QueryConfig = {
     text: `SELECT profile_pic_id FROM "Freemind".users WHERE id = $1`,
     values: [userId],
   };
 
-  queryDB(getImage, (err: Error, result: QueryResult) => {
-    if (err) {
-      console.error("Error getting profile image:", err);
-      res.status(500).json({ error: "Error getting profile image" });
-      return;
-    }
+  try {
+    const result: QueryResult = await queryDB(getImage);
 
     if (result.rowCount === 0) {
       res.status(404).json({ error: "No image found for this user id" });
@@ -33,7 +29,10 @@ async function getProfileImage(req: Request, res: Response): Promise<void> {
     } else {
       res.status(200).json({ profile_pic_id: result.rows[0].profile_pic_id });
     }
-  });
+  } catch (err) {
+    console.error("Error getting profile image:", err);
+    res.status(500).json({ error: "Error getting profile image" });
+  }
 }
 
 export { getProfileImage };

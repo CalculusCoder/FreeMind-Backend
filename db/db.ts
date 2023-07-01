@@ -14,11 +14,16 @@ function connectDB(): void {
   });
 }
 
-function queryDB(
-  query: QueryConfig,
-  callback: (err: Error, result: QueryResult) => void
-): void {
-  pool.query(query, callback);
+function queryDB(query: QueryConfig): Promise<QueryResult> {
+  return new Promise((resolve, reject) => {
+    pool.query(query, (err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
+  });
 }
 
 export { connectDB, queryDB };

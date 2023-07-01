@@ -39,10 +39,6 @@ function createPostHandler(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { topicId } = req.params;
         const { userId, postTitle, postContent } = req.body;
-        // Validate inputs here...
-        //Please remember to add some validation for the inputs before
-        //inserting them into the database to avoid SQL Injection attacks and
-        //ensure the integrity of your data.
         const schema = yup.object().shape({
             userId: yup.string().required(),
             postTitle: yup.string().min(5).required(),
@@ -54,22 +50,16 @@ function createPostHandler(req, res) {
                 text: `INSERT INTO "Freemind".posts(UserID, TopicID, PostTitle, PostContent) VALUES($1, $2, $3, $4) RETURNING *`,
                 values: [userId, topicId, postTitle, postContent],
             };
-            (0, db_1.queryDB)(createPostQuery, (err, result) => {
-                if (err) {
-                    console.error("Error creating post:", err);
-                    res.status(500).json({ error: "Error creating post" });
-                    return;
-                }
-                if (result.rowCount === 0) {
-                    console.error("Post could not be created");
-                    res.status(500).json({ error: "Post could not be created" });
-                    return;
-                }
-                else {
-                    const post = result.rows[0];
-                    res.status(200).json(post);
-                }
-            });
+            const result = yield (0, db_1.queryDB)(createPostQuery);
+            if (result.rowCount === 0) {
+                console.error("Post could not be created");
+                res.status(500).json({ error: "Post could not be created" });
+                return;
+            }
+            else {
+                const post = result.rows[0];
+                res.status(200).json(post);
+            }
         }
         catch (error) {
             res.status(400).json({ error: error });

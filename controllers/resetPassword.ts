@@ -1,21 +1,9 @@
 import { Request, Response } from "express";
-import { QueryResult } from "pg";
 import { queryDB } from "../db/db";
 import { v4 as uuidv4 } from "uuid";
-import nodemailer from "nodemailer";
 import sgMail from "@sendgrid/mail";
-import { error } from "console";
 
-function queryDBPromise(query: any): Promise<QueryResult> {
-  return new Promise((resolve, reject) => {
-    queryDB(query, (err: Error, result: QueryResult) => {
-      if (err) reject(err);
-      else resolve(result);
-    });
-  });
-}
-
-async function resetPassword(req: Request, res: Response): Promise<Response> {
+async function resetPassword(req: Request, res: Response): Promise<void> {
   const { email } = req.body;
 
   const checkForUser = {
@@ -24,14 +12,15 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
   };
 
   try {
-    const result: QueryResult = await queryDBPromise(checkForUser);
+    const result = await queryDB(checkForUser);
 
     if (result.rows.length > 0) {
       if (result.rows[0].password === null) {
-        return res.status(401).json({
+        res.status(401).json({
           error:
             "User used Google authentication to register. Please sign in with Google.",
         });
+        return;
       }
 
       const resetToken = uuidv4();
@@ -43,12 +32,7 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
         values: [resetToken, tokenExpiry, email],
       };
 
-      try {
-        await queryDBPromise(storeTokenQuery);
-      } catch (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Internal Server Error" });
-      }
+      await queryDB(storeTokenQuery);
 
       if (!process.env.GOOGLE_EMAIL) {
         throw new Error("EMAIL_USERNAME is not defined");
@@ -67,27 +51,23 @@ async function resetPassword(req: Request, res: Response): Promise<Response> {
     https://freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
       };
 
-      return sgMail
-        .send(msg)
-        .then(() => {
-          console.log("Email sent");
-          return res.status(200).json({
-            message:
-              "You will receive a password recovery link to your email shortly",
-          });
-        })
-        .catch((error) => {
-          console.error(error.message);
-          return res.status(500).json({ error: "Internal Server Error" });
+      try {
+        await sgMail.send(msg);
+        console.log("Email sent");
+        res.status(200).json({
+          message:
+            "You will receive a password recovery link to your email shortly",
         });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
     } else {
-      return res.status(400).json({ error: "Email does not exist." });
+      res.status(400).json({ error: "Email does not exist." });
     }
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ error: "Internal Server Error", message: error });
+    res.status(500).json({ error: "Internal Server Error", message: err });
   }
 }
 

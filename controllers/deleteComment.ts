@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { QueryResult } from "pg";
+import { QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 
 async function deleteCommentHandler(
@@ -9,17 +9,13 @@ async function deleteCommentHandler(
   const { postId, commentId } = req.params;
   const { userId } = req.body;
 
-  const getCommentQuery = {
+  const getCommentQuery: QueryConfig = {
     text: `SELECT * FROM "Freemind".comments WHERE CommentID = $1 AND PostID = $2`,
     values: [commentId, postId],
   };
 
-  queryDB(getCommentQuery, (err: Error, result: QueryResult) => {
-    if (err) {
-      console.error("Error retrieving comment:", err);
-      res.status(500).json({ error: "Error retrieving comment" });
-      return;
-    }
+  try {
+    const result: QueryResult = await queryDB(getCommentQuery);
 
     if (result.rowCount === 0) {
       console.error("Comment could not be found");
@@ -34,31 +30,28 @@ async function deleteCommentHandler(
         return;
       } else {
         // If the user is the comment owner or admin, delete the comment
-        const deleteCommentQuery = {
+        const deleteCommentQuery: QueryConfig = {
           text: `DELETE FROM "Freemind".comments WHERE CommentID = $1`,
           values: [commentId],
         };
 
-        queryDB(deleteCommentQuery, (err: Error, result: QueryResult) => {
-          if (err) {
-            console.error("Error deleting comment:", err);
-            res.status(500).json({ error: "Error deleting comment" });
-            return;
-          }
+        const deleteResult: QueryResult = await queryDB(deleteCommentQuery);
 
-          if (result.rowCount === 0) {
-            console.error("Comment could not be found or deleted");
-            res
-              .status(404)
-              .json({ error: "Comment could not be found or deleted" });
-            return;
-          } else {
-            res.status(200).json({ message: "Comment successfully deleted" });
-          }
-        });
+        if (deleteResult.rowCount === 0) {
+          console.error("Comment could not be found or deleted");
+          res
+            .status(404)
+            .json({ error: "Comment could not be found or deleted" });
+          return;
+        } else {
+          res.status(200).json({ message: "Comment successfully deleted" });
+        }
       }
     }
-  });
+  } catch (err) {
+    console.error("Error retrieving or deleting comment:", err);
+    res.status(500).json({ error: "Error retrieving or deleting comment" });
+  }
 }
 
 export { deleteCommentHandler };

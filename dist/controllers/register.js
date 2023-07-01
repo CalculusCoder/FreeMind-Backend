@@ -36,10 +36,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerHandler = void 0;
-const db_1 = require("../db/db");
 const Yup = __importStar(require("yup"));
-const bcrypt = require("bcrypt");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const mail_1 = __importDefault(require("@sendgrid/mail"));
+const db_1 = require("../db/db");
 const userSchema = Yup.object().shape({
     fullName: Yup.string().required(),
     forumUserName: Yup.string()
@@ -62,53 +62,50 @@ function registerHandler(req, res) {
                 email,
                 password,
             });
-            const hashedPassword = yield bcrypt.hash(password, 10);
+            const hashedPassword = yield bcrypt_1.default.hash(password, 10);
             const QueryStatement = {
                 text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
                 values: [email, fullName, forumUserName, hashedPassword],
             };
-            (0, db_1.queryDB)(QueryStatement, (err, result) => __awaiter(this, void 0, void 0, function* () {
-                if (err) {
-                    console.error(err);
-                    if (err.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
-                        return res.status(400).json({
-                            error: "Email address already registered. Sign in or use a different email",
-                        });
-                    }
-                    else if (err.message.includes('duplicate key value violates unique constraint "users_UserName_key"')) {
-                        return res.status(401).json({
-                            error: "Username already exists. Please use a different username",
-                        });
-                    }
-                    else {
-                        return res.status(500).json({ error: "Registration Failed" });
-                    }
-                }
-                else {
-                    console.log("User registered successfully");
-                    const msg = {
-                        to: "jaredgomez0812@gmail.com",
-                        from: process.env.GOOGLE_EMAIL,
-                        subject: "New User Registration",
-                        text: `A new user has registered. Details: ${JSON.stringify({
-                            fullName,
-                            email,
-                        })}`,
-                    };
-                    try {
-                        yield mail_1.default.send(msg);
-                        console.log("Email sent");
-                    }
-                    catch (error) {
-                        console.log(error);
-                    }
-                    res.json({ message: "Registration successful" });
-                }
-            }));
+            yield (0, db_1.queryDB)(QueryStatement);
+            console.log("User registered successfully");
+            const msg = {
+                to: "jaredgomez0812@gmail.com",
+                from: process.env.GOOGLE_EMAIL,
+                subject: "New User Registration",
+                text: `A new user has registered. Details: ${JSON.stringify({
+                    fullName,
+                    email,
+                })}`,
+            };
+            try {
+                yield mail_1.default.send(msg);
+                console.log("Email sent");
+            }
+            catch (error) {
+                console.error(error);
+            }
+            res.json({ message: "Registration successful" });
         }
         catch (error) {
-            console.error("Validation error", error);
-            res.status(400).json({ error: "Validation error" });
+            if (error.message.includes('duplicate key value violates unique constraint "users_email_key"')) {
+                res.status(400).json({
+                    error: "Email address already registered. Sign in or use a different email",
+                });
+            }
+            else if (error.message.includes('duplicate key value violates unique constraint "users_UserName_key"')) {
+                res.status(401).json({
+                    error: "Username already exists. Please use a different username",
+                });
+            }
+            else if (error.errors) {
+                console.error("Validation error", error);
+                res.status(400).json({ error: "Validation error" });
+            }
+            else {
+                console.error(error);
+                res.status(500).json({ error: "Registration Failed" });
+            }
         }
     });
 }

@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { queryDB } from "../db/db";
 
-async function checkGoogleRegistration(req: Request, res: Response) {
+async function checkGoogleRegistration(
+  req: Request,
+  res: Response
+): Promise<void> {
   try {
     // Get the user email from the query parameters
     const email = req.query.email as string;
@@ -13,21 +16,15 @@ async function checkGoogleRegistration(req: Request, res: Response) {
     };
 
     // Query the database
-    queryDB(QueryStatement, (err: Error, result: any) => {
-      if (err) {
-        console.error("Database error:", err);
-        res.status(500).send("Database error");
-        return;
-      }
+    const result = await queryDB(QueryStatement);
 
-      if (result.rows.length > 0) {
-        // If the user exists, return a response indicating that the user is registered
-        res.json({ isRegistered: true });
-      } else {
-        // If the user does not exist, return a response indicating that the user is not registered
-        res.json({ isRegistered: false });
-      }
-    });
+    if (result.rows.length > 0) {
+      // If the user exists, return a response indicating that the user is registered
+      res.json({ isRegistered: true });
+    } else {
+      // If the user does not exist, return a response indicating that the user is not registered
+      res.json({ isRegistered: false });
+    }
   } catch (error) {
     console.error("Error occurred", error);
     res.status(500).send("Error occurred");

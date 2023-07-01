@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
+import { QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 
-function getAdditionalDataHandler(req: Request, res: Response) {
+async function getAdditionalDataHandler(
+  req: Request,
+  res: Response
+): Promise<void> {
   const email = req.query.email as string;
   console.log(email);
 
@@ -10,26 +14,26 @@ function getAdditionalDataHandler(req: Request, res: Response) {
     return;
   }
 
-  const QueryStatement = {
+  const QueryStatement: QueryConfig = {
     text: 'SELECT id, username, email, fullName, profile_pic_id, stripe_customer_id FROM "Freemind".users WHERE email = $1',
     values: [email],
   };
 
-  queryDB(QueryStatement, (err: Error, result: any) => {
-    if (err) {
-      console.error("Database query error", err);
-      res.status(500).json({ error: "Database query error" });
+  try {
+    const result: QueryResult = await queryDB(QueryStatement);
+
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      console.log(user);
+      res.json(user);
     } else {
-      if (result.rows.length > 0) {
-        const user = result.rows[0];
-        console.log(user);
-        res.json(user);
-      } else {
-        console.log("User not found");
-        res.status(404).json({ error: "User not found" });
-      }
+      console.log("User not found");
+      res.status(404).json({ error: "User not found" });
     }
-  });
+  } catch (err) {
+    console.error("Database query error", err);
+    res.status(500).json({ error: "Database query error" });
+  }
 }
 
 export { getAdditionalDataHandler };

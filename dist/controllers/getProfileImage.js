@@ -51,12 +51,8 @@ function getProfileImage(req, res) {
             text: `SELECT profile_pic_id FROM "Freemind".users WHERE id = $1`,
             values: [userId],
         };
-        (0, db_1.queryDB)(getImage, (err, result) => {
-            if (err) {
-                console.error("Error getting profile image:", err);
-                res.status(500).json({ error: "Error getting profile image" });
-                return;
-            }
+        try {
+            const result = yield (0, db_1.queryDB)(getImage);
             if (result.rowCount === 0) {
                 res.status(404).json({ error: "No image found for this user id" });
                 return;
@@ -64,7 +60,11 @@ function getProfileImage(req, res) {
             else {
                 res.status(200).json({ profile_pic_id: result.rows[0].profile_pic_id });
             }
-        });
+        }
+        catch (err) {
+            console.error("Error getting profile image:", err);
+            res.status(500).json({ error: "Error getting profile image" });
+        }
     });
 }
 exports.getProfileImage = getProfileImage;

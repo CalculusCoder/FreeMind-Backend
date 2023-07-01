@@ -15,8 +15,17 @@ function connectDB() {
     });
 }
 exports.connectDB = connectDB;
-function queryDB(query, callback) {
-    exports.pool.query(query, callback);
+function queryDB(query) {
+    return new Promise((resolve, reject) => {
+        exports.pool.query(query, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(res);
+            }
+        });
+    });
 }
 exports.queryDB = queryDB;
 //# sourceMappingURL=db.js.map

@@ -22,21 +22,15 @@ function checkGoogleRegistration(req, res) {
                 values: [email],
             };
             // Query the database
-            (0, db_1.queryDB)(QueryStatement, (err, result) => {
-                if (err) {
-                    console.error("Database error:", err);
-                    res.status(500).send("Database error");
-                    return;
-                }
-                if (result.rows.length > 0) {
-                    // If the user exists, return a response indicating that the user is registered
-                    res.json({ isRegistered: true });
-                }
-                else {
-                    // If the user does not exist, return a response indicating that the user is not registered
-                    res.json({ isRegistered: false });
-                }
-            });
+            const result = yield (0, db_1.queryDB)(QueryStatement);
+            if (result.rows.length > 0) {
+                // If the user exists, return a response indicating that the user is registered
+                res.json({ isRegistered: true });
+            }
+            else {
+                // If the user does not exist, return a response indicating that the user is not registered
+                res.json({ isRegistered: false });
+            }
         }
         catch (error) {
             console.error("Error occurred", error);

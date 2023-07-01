@@ -19,12 +19,8 @@ function deleteCommentHandler(req, res) {
             text: `SELECT * FROM "Freemind".comments WHERE CommentID = $1 AND PostID = $2`,
             values: [commentId, postId],
         };
-        (0, db_1.queryDB)(getCommentQuery, (err, result) => {
-            if (err) {
-                console.error("Error retrieving comment:", err);
-                res.status(500).json({ error: "Error retrieving comment" });
-                return;
-            }
+        try {
+            const result = yield (0, db_1.queryDB)(getCommentQuery);
             if (result.rowCount === 0) {
                 console.error("Comment could not be found");
                 res.status(404).json({ error: "Comment could not be found" });
@@ -44,26 +40,24 @@ function deleteCommentHandler(req, res) {
                         text: `DELETE FROM "Freemind".comments WHERE CommentID = $1`,
                         values: [commentId],
                     };
-                    (0, db_1.queryDB)(deleteCommentQuery, (err, result) => {
-                        if (err) {
-                            console.error("Error deleting comment:", err);
-                            res.status(500).json({ error: "Error deleting comment" });
-                            return;
-                        }
-                        if (result.rowCount === 0) {
-                            console.error("Comment could not be found or deleted");
-                            res
-                                .status(404)
-                                .json({ error: "Comment could not be found or deleted" });
-                            return;
-                        }
-                        else {
-                            res.status(200).json({ message: "Comment successfully deleted" });
-                        }
-                    });
+                    const deleteResult = yield (0, db_1.queryDB)(deleteCommentQuery);
+                    if (deleteResult.rowCount === 0) {
+                        console.error("Comment could not be found or deleted");
+                        res
+                            .status(404)
+                            .json({ error: "Comment could not be found or deleted" });
+                        return;
+                    }
+                    else {
+                        res.status(200).json({ message: "Comment successfully deleted" });
+                    }
                 }
             }
-        });
+        }
+        catch (err) {
+            console.error("Error retrieving or deleting comment:", err);
+            res.status(500).json({ error: "Error retrieving or deleting comment" });
+        }
     });
 }
 exports.deleteCommentHandler = deleteCommentHandler;

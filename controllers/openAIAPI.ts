@@ -1,7 +1,7 @@
 import { Configuration, OpenAIApi } from "openai";
 import { Request, Response } from "express";
 import { queryDB } from "../db/db";
-import { QueryResult } from "pg";
+import { QueryConfig, QueryResult } from "pg";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -12,36 +12,30 @@ const openai = new OpenAIApi(configuration);
 async function getCompletion(req: Request, res: Response) {
   const { message, email } = req.body;
 
-  const checkAPIUsage = {
+  const checkAPIUsage: QueryConfig = {
     text: `SELECT chatbot_uses FROM "Freemind".users WHERE email=$1`,
     values: [email],
   };
 
-  queryDB(checkAPIUsage, (err: Error, result: QueryResult) => {
-    if (err) {
-      res.status(500).send("Error querying database");
-      return;
-    }
+  try {
+    const result: QueryResult = await queryDB(checkAPIUsage);
 
     if (!result.rows[0] || result.rows[0].chatbot_uses >= 8) {
       res.status(403).send("Daily limit of chatbot usage reached");
       return;
     }
 
-    const incrementCount = {
+    const incrementCount: QueryConfig = {
       text: `UPDATE "Freemind".users SET chatbot_uses = chatbot_uses + 1 WHERE email=$1`,
       values: [email],
     };
 
-    queryDB(incrementCount, (err: Error, result: QueryResult) => {
-      if (err) {
-        res.status(500).send("Error updating database");
-        return;
-      }
-
-      handleChatBotQuery(message, res);
-    });
-  });
+    await queryDB(incrementCount);
+    await handleChatBotQuery(message, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error querying or updating database");
+  }
 }
 
 async function handleChatBotQuery(message: string, res: Response) {

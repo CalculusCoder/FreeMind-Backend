@@ -24,16 +24,6 @@ if (!process.env.SENDGRID_API_KEY) {
     throw new Error("SENDGRID_API_KEY is not defined");
 }
 mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
-// let transport = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//       type: 'OAuth2',
-//       user: process.env.GOOGLE_EMAIL,
-//       clientId: process.env.GOOGLE_CLIENT_ID,
-//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//       refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-//   },
-// });
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, "views/receipt.ejs");
@@ -51,18 +41,6 @@ function sendReceiptEmail(userEmail, receipt) {
             .send(msg)
             .then(() => console.log("Email sent"))
             .catch((error) => console.log(error.message));
-        // const mailOptions = {
-        //   from: process.env.EMAIL_USERNAME,
-        //   to: userEmail,
-        //   subject: 'Your Receipt',
-        //   html: compiled({ receipt: receipt }) // pass data to template
-        // };
-        // return transport.sendMail(mailOptions, (error, info) => {
-        //   if (error) {
-        //     return console.log(error);
-        //   }
-        //   console.log('Message sent: %s', info.messageId);
-        // });
     });
 }
 function webhookHandler(req, res) {
@@ -92,14 +70,15 @@ function webhookHandler(req, res) {
                 text: 'UPDATE "Freemind".users stripe_customer_id=$2, access_expiration=$3 WHERE email=$1',
                 values: [userEmail, customerId, newExpirationDate],
             };
-            (0, db_1.queryDB)(updateMembershipStatusQuery, (err, result) => {
-                if (err) {
-                    console.error("Database query error", err);
-                }
+            try {
+                const result = yield (0, db_1.queryDB)(updateMembershipStatusQuery);
                 if (result.rowCount === 0) {
                     console.error("No user found with the given email");
                 }
-            });
+            }
+            catch (err) {
+                console.error("Database query error", err);
+            }
         }
         else if (event.type === "invoice.payment_succeeded") {
             const invoice = event.data.object;
@@ -114,14 +93,15 @@ function webhookHandler(req, res) {
                 text: 'UPDATE "Freemind".users SET stripe_customer_id=$2, access_expiration=$3 WHERE email=$1',
                 values: [userEmail, customerId, newExpirationDate],
             };
-            (0, db_1.queryDB)(updateMembershipStatusQuery, (err, result) => {
-                if (err) {
-                    console.error("Database query error", err);
-                }
+            try {
+                const result = yield (0, db_1.queryDB)(updateMembershipStatusQuery);
                 if (result.rowCount === 0) {
                     console.error("No user found with the given email");
                 }
-            });
+            }
+            catch (err) {
+                console.error("Database query error", err);
+            }
         }
         else if (event.type === "invoice.payment_failed") {
             const invoice = event.data.object;

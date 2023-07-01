@@ -39,10 +39,6 @@ function createCommentHandler(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { postId } = req.params;
         const { userId, commentContent } = req.body;
-        // Validate inputs here...
-        //Please remember to add some validation for the inputs before
-        //inserting them into the database to avoid SQL Injection attacks and
-        //ensure the integrity of your data.
         const schema = yup.object().shape({
             userId: yup.string().required(),
             commentContent: yup.string().min(2).required(),
@@ -53,24 +49,18 @@ function createCommentHandler(req, res) {
                 text: `INSERT INTO "Freemind".comments(UserID, PostID, CommentContent) VALUES($1, $2, $3) RETURNING *`,
                 values: [userId, postId, commentContent],
             };
-            (0, db_1.queryDB)(createCommentQuery, (err, result) => {
-                if (err) {
-                    console.error("Error creating comment:", err);
-                    res.status(500).json({ error: "Error creating comment" });
-                    return;
-                }
-                if (result.rowCount === 0) {
-                    console.error("Comment could not be created");
-                    res.status(500).json({ error: "Comment could not be created" });
-                    return;
-                }
-                else {
-                    const comment = result.rows[0];
-                    res.status(200).json(comment);
-                }
-            });
+            const result = yield (0, db_1.queryDB)(createCommentQuery);
+            if (result.rowCount === 0) {
+                console.error("Comment could not be created");
+                res.status(500).json({ error: "Comment could not be created" });
+            }
+            else {
+                const comment = result.rows[0];
+                res.status(200).json(comment);
+            }
         }
         catch (error) {
+            console.error("Error creating comment:", error);
             res.status(400).json({ error: error });
         }
     });

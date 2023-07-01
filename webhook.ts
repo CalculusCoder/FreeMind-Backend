@@ -16,17 +16,6 @@ if (!process.env.SENDGRID_API_KEY) {
 }
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-// let transport = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//       type: 'OAuth2',
-//       user: process.env.GOOGLE_EMAIL,
-//       clientId: process.env.GOOGLE_CLIENT_ID,
-//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//       refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-//   },
-// });
-
 async function sendReceiptEmail(userEmail: string, receipt: any) {
   const filePath = path.join(__dirname, "views/receipt.ejs");
   const compiled = ejs.compile(fs.readFileSync(filePath, "utf8"));
@@ -46,20 +35,6 @@ async function sendReceiptEmail(userEmail: string, receipt: any) {
     .send(msg)
     .then(() => console.log("Email sent"))
     .catch((error) => console.log(error.message));
-
-  // const mailOptions = {
-  //   from: process.env.EMAIL_USERNAME,
-  //   to: userEmail,
-  //   subject: 'Your Receipt',
-  //   html: compiled({ receipt: receipt }) // pass data to template
-  // };
-
-  // return transport.sendMail(mailOptions, (error, info) => {
-  //   if (error) {
-  //     return console.log(error);
-  //   }
-  //   console.log('Message sent: %s', info.messageId);
-  // });
 }
 
 async function webhookHandler(req: ExtendedRequest, res: Response) {
@@ -96,15 +71,14 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
       values: [userEmail, customerId, newExpirationDate],
     };
 
-    queryDB(updateMembershipStatusQuery, (err: Error, result: QueryResult) => {
-      if (err) {
-        console.error("Database query error", err);
-      }
-
+    try {
+      const result = await queryDB(updateMembershipStatusQuery);
       if (result.rowCount === 0) {
         console.error("No user found with the given email");
       }
-    });
+    } catch (err) {
+      console.error("Database query error", err);
+    }
   } else if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object;
     console.log("Invoice payment was successful:", invoice.id);
@@ -125,15 +99,14 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
       values: [userEmail, customerId, newExpirationDate],
     };
 
-    queryDB(updateMembershipStatusQuery, (err: Error, result: QueryResult) => {
-      if (err) {
-        console.error("Database query error", err);
-      }
-
+    try {
+      const result = await queryDB(updateMembershipStatusQuery);
       if (result.rowCount === 0) {
         console.error("No user found with the given email");
       }
-    });
+    } catch (err) {
+      console.error("Database query error", err);
+    }
   } else if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object;
     console.log("Invoice payment failed:", invoice.id);

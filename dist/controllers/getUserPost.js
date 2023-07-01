@@ -18,12 +18,8 @@ function getUserPost(req, res) {
             text: `SELECT posts.*, users.username, users.profile_pic_id FROM "Freemind".posts JOIN "Freemind".users ON posts.userid = users.id WHERE posts.topicid = $1 AND posts.postid = $2`,
             values: [topicId, postId],
         };
-        (0, db_1.queryDB)(getPostsQuery, (err, result) => {
-            if (err) {
-                console.error("Error retrieving post:", err);
-                res.status(500).json({ error: "Error retrieving post" });
-                return;
-            }
+        try {
+            const result = yield (0, db_1.queryDB)(getPostsQuery);
             if (result.rowCount === 0) {
                 res.status(404).json({ error: "No post found for this id" });
                 return;
@@ -32,7 +28,11 @@ function getUserPost(req, res) {
                 const post = result.rows[0];
                 res.status(200).json(post);
             }
-        });
+        }
+        catch (err) {
+            console.error("Error retrieving post:", err);
+            res.status(500).json({ error: "Error retrieving post" });
+        }
     });
 }
 exports.getUserPost = getUserPost;

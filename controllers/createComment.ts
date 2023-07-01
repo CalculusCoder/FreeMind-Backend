@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { QueryResult } from "pg";
 import { queryDB } from "../db/db";
 import * as yup from "yup";
 
@@ -9,11 +8,6 @@ async function createCommentHandler(
 ): Promise<void> {
   const { postId } = req.params;
   const { userId, commentContent } = req.body;
-
-  // Validate inputs here...
-  //Please remember to add some validation for the inputs before
-  //inserting them into the database to avoid SQL Injection attacks and
-  //ensure the integrity of your data.
 
   const schema = yup.object().shape({
     userId: yup.string().required(),
@@ -28,23 +22,17 @@ async function createCommentHandler(
       values: [userId, postId, commentContent],
     };
 
-    queryDB(createCommentQuery, (err: Error, result: QueryResult) => {
-      if (err) {
-        console.error("Error creating comment:", err);
-        res.status(500).json({ error: "Error creating comment" });
-        return;
-      }
+    const result = await queryDB(createCommentQuery);
 
-      if (result.rowCount === 0) {
-        console.error("Comment could not be created");
-        res.status(500).json({ error: "Comment could not be created" });
-        return;
-      } else {
-        const comment = result.rows[0];
-        res.status(200).json(comment);
-      }
-    });
+    if (result.rowCount === 0) {
+      console.error("Comment could not be created");
+      res.status(500).json({ error: "Comment could not be created" });
+    } else {
+      const comment = result.rows[0];
+      res.status(200).json(comment);
+    }
   } catch (error) {
+    console.error("Error creating comment:", error);
     res.status(400).json({ error: error });
   }
 }

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { QueryResult } from "pg";
+import { QueryResult, QueryConfig } from "pg";
 import { queryDB } from "../db/db";
 
 async function getAllPostsHandler(req: Request, res: Response): Promise<void> {
@@ -8,7 +8,7 @@ async function getAllPostsHandler(req: Request, res: Response): Promise<void> {
   const page = parseInt(req.query.page as string) || 0;
   const pageSize = parseInt(req.query.pageSize as string) || 30;
 
-  const getPostsQuery = {
+  const getPostsQuery: QueryConfig = {
     text: `
       SELECT posts.*, users.username, users.profile_pic_id 
       FROM "Freemind".posts 
@@ -19,12 +19,8 @@ async function getAllPostsHandler(req: Request, res: Response): Promise<void> {
     values: [topicId, pageSize, page * pageSize],
   };
 
-  queryDB(getPostsQuery, (err: Error, result: QueryResult) => {
-    if (err) {
-      console.error("Error retrieving posts:", err);
-      res.status(500).json({ error: "Error retrieving posts" });
-      return;
-    }
+  try {
+    const result: QueryResult = await queryDB(getPostsQuery);
 
     if (result.rowCount === 0) {
       res.status(404).json({ error: "No posts found for this topic" });
@@ -33,7 +29,10 @@ async function getAllPostsHandler(req: Request, res: Response): Promise<void> {
       const posts = result.rows;
       res.status(200).json(posts);
     }
-  });
+  } catch (err) {
+    console.error("Error retrieving posts:", err);
+    res.status(500).json({ error: "Error retrieving posts" });
+  }
 }
 
 export { getAllPostsHandler };

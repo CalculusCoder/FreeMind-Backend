@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { Pool } from "pg";
-import { queryDB } from "../db/db";
 import { db } from "../configuration/config";
 
 // Assume you have a connection pool

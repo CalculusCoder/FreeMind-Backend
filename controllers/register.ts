@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import { Pool, QueryResult, QueryConfig } from "pg";
-import { queryDB } from "../db/db";
+import { QueryConfig } from "pg";
 import * as Yup from "yup";
-const bcrypt = require("bcrypt");
+import bcrypt from "bcrypt";
 import sgMail from "@sendgrid/mail";
+import { queryDB } from "../db/db";
 
 const userSchema = Yup.object().shape({
   fullName: Yup.string().required(),
@@ -37,54 +37,51 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
       values: [email, fullName, forumUserName, hashedPassword],
     };
 
-    queryDB(QueryStatement, async (err: Error, result: QueryResult) => {
-      if (err) {
-        console.error(err);
-        if (
-          err.message.includes(
-            'duplicate key value violates unique constraint "users_email_key"'
-          )
-        ) {
-          return res.status(400).json({
-            error:
-              "Email address already registered. Sign in or use a different email",
-          });
-        } else if (
-          err.message.includes(
-            'duplicate key value violates unique constraint "users_UserName_key"'
-          )
-        ) {
-          return res.status(401).json({
-            error: "Username already exists. Please use a different username",
-          });
-        } else {
-          return res.status(500).json({ error: "Registration Failed" });
-        }
-      } else {
-        console.log("User registered successfully");
-        const msg = {
-          to: "jaredgomez0812@gmail.com",
-          from: process.env.GOOGLE_EMAIL as string,
-          subject: "New User Registration",
-          text: `A new user has registered. Details: ${JSON.stringify({
-            fullName,
-            email,
-          })}`,
-        };
+    await queryDB(QueryStatement);
+    console.log("User registered successfully");
+    const msg = {
+      to: "jaredgomez0812@gmail.com",
+      from: process.env.GOOGLE_EMAIL as string,
+      subject: "New User Registration",
+      text: `A new user has registered. Details: ${JSON.stringify({
+        fullName,
+        email,
+      })}`,
+    };
 
-        try {
-          await sgMail.send(msg);
-          console.log("Email sent");
-        } catch (error) {
-          console.log(error);
-        }
+    try {
+      await sgMail.send(msg);
+      console.log("Email sent");
+    } catch (error) {
+      console.error(error);
+    }
 
-        res.json({ message: "Registration successful" });
-      }
-    });
+    res.json({ message: "Registration successful" });
   } catch (error) {
-    console.error("Validation error", error);
-    res.status(400).json({ error: "Validation error" });
+    if (
+      (error as Error).message.includes(
+        'duplicate key value violates unique constraint "users_email_key"'
+      )
+    ) {
+      res.status(400).json({
+        error:
+          "Email address already registered. Sign in or use a different email",
+      });
+    } else if (
+      (error as Error).message.includes(
+        'duplicate key value violates unique constraint "users_UserName_key"'
+      )
+    ) {
+      res.status(401).json({
+        error: "Username already exists. Please use a different username",
+      });
+    } else if ((error as Yup.ValidationError).errors) {
+      console.error("Validation error", error);
+      res.status(400).json({ error: "Validation error" });
+    } else {
+      console.error(error);
+      res.status(500).json({ error: "Registration Failed" });
+    }
   }
 }
 

@@ -47,29 +47,26 @@ function createGoogleUsername(req, res) {
             yield userSchema.validate({
                 forumUserName,
             });
-            // Update query to include the forumUserName
             const QueryStatement = {
                 text: `UPDATE "Freemind".users SET username = $2 WHERE email = $1`,
                 values: [email, forumUserName],
             };
-            (0, db_1.queryDB)(QueryStatement, (err, result) => {
-                if (err) {
-                    console.error(err);
-                    if (err.message.includes('duplicate key value violates unique constraint "users_UserName_key"')) {
-                        return res.status(400).json({
-                            error: "Username already exists. Please choose a different one.",
-                        });
-                    }
-                    else {
-                        return res.status(500).json({ error: "Update Failed" });
-                    }
-                }
-                res.status(200).json({ message: "Username updated successfully" });
-            });
+            const result = yield (0, db_1.queryDB)(QueryStatement);
+            if (result.rowCount === 0) {
+                throw new Error("Update Failed");
+            }
+            res.status(200).json({ message: "Username updated successfully" });
         }
         catch (error) {
-            console.log(error);
-            res.status(400).json({ error: error });
+            console.error(error);
+            if (error.message.includes('duplicate key value violates unique constraint "users_UserName_key"')) {
+                res.status(400).json({
+                    error: "Username already exists. Please choose a different one.",
+                });
+            }
+            else {
+                res.status(500).json({ error: "Update Failed" });
+            }
         }
     });
 }
