@@ -44,7 +44,7 @@ if (port == null || port == "") {
     port = 5000;
 }
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://freemindrecovery.com"],
+    origin: ["http://localhost:3000", "https://www.freemindrecovery.com"],
     credentials: true,
 };
 app.use((0, cors_1.default)(corsOptions));
