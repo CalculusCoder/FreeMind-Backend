@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { queryDB } from "../db/db";
 import { v4 as uuidv4 } from "uuid";
 import sgMail from "@sendgrid/mail";
+import nodemailer from "nodemailer";
 
 async function resetPassword(req: Request, res: Response): Promise<void> {
   const { email } = req.body;
@@ -41,29 +42,41 @@ async function resetPassword(req: Request, res: Response): Promise<void> {
       if (!process.env.SENDGRID_API_KEY) {
         throw new Error("SENDGRID_API_KEY is not defined");
       }
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-      const msg = {
-        to: email,
-        from: process.env.GOOGLE_EMAIL,
-        subject: "Password Reset Request",
-        text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
-    https://www.freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
-      };
 
       try {
-        await sgMail.send(msg);
-        console.log("Email sent");
-        res.status(200).json({
-          message:
-            "You will receive a password recovery link to your email shortly",
+        let transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            type: "OAuth2",
+            user: "freemindcontact1@gmail.com",
+            //can add password here
+            clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
+            refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
+          },
         });
+
+        //switch to http://localhost:3000 when testing
+        //change to freemind url when finished
+
+        let mailOptions = {
+          from: "freemindcontact1@gmail.com",
+          to: email,
+          subject: "Password Reset Request",
+          text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
+          https://www.freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.json({ message: "Success! Please check your email!" });
       } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Error sending reset password email." });
+        return;
       }
     } else {
       res.status(400).json({ error: "Email does not exist." });
+      return;
     }
   } catch (err) {
     console.error(err);

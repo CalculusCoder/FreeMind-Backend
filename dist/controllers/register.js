@@ -41,6 +41,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const mail_1 = __importDefault(require("@sendgrid/mail"));
 const db_1 = require("../db/db");
 const uuid_1 = require("uuid");
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const userSchema = Yup.object().shape({
     fullName: Yup.string().required(),
     forumUserName: Yup.string()
@@ -77,41 +78,43 @@ function registerHandler(req, res) {
             };
             const result = yield (0, db_1.queryDB)(QueryStatement);
             const userId = result.rows[0].id;
-            const msg = {
-                to: "jaredgomez0812@gmail.com",
-                from: process.env.GOOGLE_EMAIL,
-                subject: "New User Registration",
-                text: `A new user has registered. Details: ${JSON.stringify({
-                    fullName,
-                    email,
-                })}`,
-            };
             try {
-                yield mail_1.default.send(msg);
-                // https://www.freemindrecovery.com
+                let transporter = nodemailer_1.default.createTransport({
+                    service: "gmail",
+                    auth: {
+                        type: "OAuth2",
+                        user: "freemindcontact1@gmail.com",
+                        //can add password here
+                        clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
+                        clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
+                        refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
+                    },
+                });
+                let mailOptions = {
+                    from: "freemindcontact1@gmail.com",
+                    to: "jaredgomez0812@gmail.com",
+                    subject: "New User Registration",
+                    text: `A new user has registered. Details: ${JSON.stringify({
+                        fullName,
+                        email,
+                    })}`,
+                };
                 //switch to http://localhost:3000 when testing
                 //change to freemind url when finished
                 const verificationUrl = `https://www.freemindrecovery.com/Home/VerifyEmail/?token=${verificationToken}&id=${userId}`;
-                const verificationMsg = {
-                    to: email,
+                let userVerificationMailOptions = {
                     from: "freemindcontact1@gmail.com",
+                    to: email,
                     subject: "Verify Your Email",
                     text: `Please verify your email by clicking on the link: ${verificationUrl}`,
                 };
-                yield mail_1.default.send(verificationMsg);
-                console.log("Emails sent");
+                yield transporter.sendMail(mailOptions);
+                yield transporter.sendMail(userVerificationMailOptions);
             }
             catch (error) {
-                console.error(error);
+                res.status(500).send("Error sending appropriate emails");
+                return;
             }
-            // const verificationUrl = `https://yourwebsite.com/verify?token=${verificationToken}`;
-            // const verificationMsg = {
-            //   to: email, // Send to the user's email
-            //   from: process.env.GOOGLE_EMAIL as string,
-            //   subject: "Verify Your Email",
-            //   text: `Please verify your email by clicking on the link: ${verificationUrl}`,
-            // };
-            // await sgMail.send(verificationMsg);
             res.json({ message: "Registration successful" });
         }
         catch (error) {

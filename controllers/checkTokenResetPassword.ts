@@ -34,26 +34,31 @@ async function checkTokenResetPassword(
 
       await queryDB(updatePasswordQuery);
 
-      // Send confirmation email
-      let transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          type: "OAuth2",
-          user: process.env.GOOGLE_EMAIL,
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-        },
-      });
+      try {
+        let transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            type: "OAuth2",
+            user: "freemindcontact1@gmail.com",
+            //can add password here
+            clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
+            refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
+          },
+        });
 
-      let mailOptions = {
-        from: process.env.GOOGLE_EMAIL,
-        to: result.rows[0].email,
-        subject: "Password Reset Successful",
-        text: `Your password has been successfully reset.`,
-      };
+        let mailOptions = {
+          from: "freemindcontact1@gmail.com",
+          to: result.rows[0].email,
+          subject: "Password Reset Successful!",
+          text: `Your password has been successfully reset.`,
+        };
 
-      await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+      } catch (error) {
+        res.status(500).json({ error: "Error sending success emails" });
+        return;
+      }
 
       res.status(200).json({ message: "Password reset successful." });
     } else {
