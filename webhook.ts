@@ -18,6 +18,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendReceiptEmail(userEmail: string, receipt: any) {
   const filePath = path.join(__dirname, "views/receipt.ejs");
+
+  //Read EJS file and compile
   const compiled = ejs.compile(fs.readFileSync(filePath, "utf8"));
 
   if (!process.env.GOOGLE_EMAIL) {
@@ -37,10 +39,13 @@ async function sendReceiptEmail(userEmail: string, receipt: any) {
     .catch((error) => console.log(error.message));
 }
 
+//WebHook Handler
+
 async function webhookHandler(req: ExtendedRequest, res: Response) {
   const stripeSignature = req.headers["stripe-signature"] as string;
   let event;
 
+  //Construct Webhook Event
   try {
     event = stripe.webhooks.constructEvent(
       req.rawBody,
@@ -52,15 +57,17 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
     return res.status(400).send(`Webhook error: ${err}`);
   }
 
+  //If payment succeeds
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object;
     console.log("PaymentIntent was successful:", paymentIntent.id);
-  } else if (event.type === "customer.subscription.created") {
+  }
+  //IF User is first time customer
+  else if (event.type === "customer.subscription.created") {
     const subscription = event.data.object;
     console.log("Subscription created:", subscription.id);
 
     const customerId = subscription.customer;
-
     const customer = await stripe.customers.retrieve(customerId);
     const userEmail = customer.email;
     const newExpirationDate = new Date(subscription.current_period_end * 1000);
@@ -88,6 +95,9 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
 
     sendReceiptEmail(userEmail, invoice);
 
+    //IF user is not first time customer and is renewing subscription,
+    //Create new expiration date and update DB
+
     const subscription = await stripe.subscriptions.retrieve(
       event.data.object.subscription
     );
@@ -107,7 +117,9 @@ async function webhookHandler(req: ExtendedRequest, res: Response) {
     } catch (err) {
       console.error("Database query error", err);
     }
-  } else if (event.type === "invoice.payment_failed") {
+  }
+  //If invoice payment failed
+  else if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object;
     console.log("Invoice payment failed:", invoice.id);
     return res.sendStatus(401);

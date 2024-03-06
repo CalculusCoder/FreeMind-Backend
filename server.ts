@@ -26,6 +26,8 @@ const corsOptions = {
   credentials: true,
 };
 
+app.use(express.static("images"));
+
 app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 app.use(

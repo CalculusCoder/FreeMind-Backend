@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import bcrypt from "bcrypt";
 import sgMail from "@sendgrid/mail";
 import { queryDB } from "../db/db";
+import { v4 as uuidv4 } from "uuid";
 
 const userSchema = Yup.object().shape({
   fullName: Yup.string().required(),
@@ -32,13 +33,22 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const verificationToken = uuidv4();
+
     const QueryStatement: QueryConfig = {
-      text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
-      values: [email, fullName, forumUserName, hashedPassword],
+      text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password, verification_token) VALUES ($1::text, $2::text, $3::text, $4::text, $5::text) RETURNING id',
+      values: [
+        email,
+        fullName,
+        forumUserName,
+        hashedPassword,
+        verificationToken,
+      ],
     };
 
-    await queryDB(QueryStatement);
-    console.log("User registered successfully");
+    const result = await queryDB(QueryStatement);
+    const userId = result.rows[0].id;
+
     const msg = {
       to: "jaredgomez0812@gmail.com",
       from: process.env.GOOGLE_EMAIL as string,
@@ -51,10 +61,33 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
 
     try {
       await sgMail.send(msg);
-      console.log("Email sent");
+
+      // https://www.freemindrecovery.com
+      //switch to http://localhost:3000 when testing
+      //change to freemind url when finished
+      const verificationUrl = `https://www.freemindrecovery.com/Home/VerifyEmail/?token=${verificationToken}&id=${userId}`;
+      const verificationMsg = {
+        to: email,
+        from: "freemindcontact1@gmail.com",
+        subject: "Verify Your Email",
+        text: `Please verify your email by clicking on the link: ${verificationUrl}`,
+      };
+
+      await sgMail.send(verificationMsg);
+      console.log("Emails sent");
     } catch (error) {
       console.error(error);
     }
+
+    // const verificationUrl = `https://yourwebsite.com/verify?token=${verificationToken}`;
+    // const verificationMsg = {
+    //   to: email, // Send to the user's email
+    //   from: process.env.GOOGLE_EMAIL as string,
+    //   subject: "Verify Your Email",
+    //   text: `Please verify your email by clicking on the link: ${verificationUrl}`,
+    // };
+
+    // await sgMail.send(verificationMsg);
 
     res.json({ message: "Registration successful" });
   } catch (error) {

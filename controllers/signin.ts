@@ -22,6 +22,12 @@ async function loginHandler(req: Request, res: Response): Promise<void> {
         });
         return;
       }
+
+      if (user.is_verified === false) {
+        res.status(400).json({ error: "User email not verified" });
+        return;
+      }
+
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (isMatch) {

@@ -27,6 +27,8 @@ import { resetPassword } from "../controllers/resetPassword";
 import { checkTokenResetPassword } from "../controllers/checkTokenResetPassword";
 import { getSubscriptionStatus } from "../controllers/getSubscriptionStatus";
 import { getCompletion } from "../controllers/openAIAPI";
+import { sendEmails } from "../controllers/sendEmail";
+import { verifyUserEmail } from "../controllers/verifyUserEmail";
 const router = express.Router();
 
 router.post("/Signin", loginHandler);
@@ -63,6 +65,9 @@ router.post(
   express.raw({ type: "application/json" }),
   webhookHandler
 );
+
+router.post("/send-emails", sendEmails);
+router.post("/verifyEmail", verifyUserEmail);
 
 export { router };
 

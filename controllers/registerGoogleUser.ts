@@ -23,8 +23,8 @@ async function registerGoogleUser(req: Request, res: Response): Promise<void> {
     });
 
     const QueryStatement = {
-      text: `INSERT INTO "Freemind".users (Email, fullName) VALUES ($1::text, $2::text) RETURNING id, email, fullName, profile_pic_id`,
-      values: [email, fullName],
+      text: `INSERT INTO "Freemind".users (Email, fullName, is_verified) VALUES ($1::text, $2::text, $3::boolean) RETURNING id, email, fullName, profile_pic_id`,
+      values: [email, fullName, true],
     };
 
     const result = await queryDB(QueryStatement);

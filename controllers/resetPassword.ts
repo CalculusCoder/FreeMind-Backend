@@ -48,7 +48,7 @@ async function resetPassword(req: Request, res: Response): Promise<void> {
         from: process.env.GOOGLE_EMAIL,
         subject: "Password Reset Request",
         text: `You have requested to reset your password. Please click on the following link, or paste it into your browser to complete the process within the next 15 minutes: 
-    https://freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
+    https://www.freemindrecovery.com/Home/ResetPassword?token=${resetToken}`,
       };
 
       try {

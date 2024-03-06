@@ -27,6 +27,7 @@ mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 function sendReceiptEmail(userEmail, receipt) {
     return __awaiter(this, void 0, void 0, function* () {
         const filePath = path_1.default.join(__dirname, "views/receipt.ejs");
+        //Read EJS file and compile
         const compiled = ejs_1.default.compile(fs_1.default.readFileSync(filePath, "utf8"));
         if (!process.env.GOOGLE_EMAIL) {
             throw new Error("EMAIL_USERNAME is not defined");
@@ -43,10 +44,12 @@ function sendReceiptEmail(userEmail, receipt) {
             .catch((error) => console.log(error.message));
     });
 }
+//WebHook Handler
 function webhookHandler(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const stripeSignature = req.headers["stripe-signature"];
         let event;
+        //Construct Webhook Event
         try {
             event = stripe.webhooks.constructEvent(req.rawBody, stripeSignature, process.env.STRIPE_WEBHOOK_SIGNATURE);
         }
@@ -54,10 +57,12 @@ function webhookHandler(req, res) {
             console.log(`Error: ${err}`);
             return res.status(400).send(`Webhook error: ${err}`);
         }
+        //If payment succeeds
         if (event.type === "payment_intent.succeeded") {
             const paymentIntent = event.data.object;
             console.log("PaymentIntent was successful:", paymentIntent.id);
         }
+        //IF User is first time customer
         else if (event.type === "customer.subscription.created") {
             const subscription = event.data.object;
             console.log("Subscription created:", subscription.id);
@@ -86,6 +91,8 @@ function webhookHandler(req, res) {
             const userEmail = invoice.customer_email;
             const customerId = invoice.customer;
             sendReceiptEmail(userEmail, invoice);
+            //IF user is not first time customer and is renewing subscription,
+            //Create new expiration date and update DB
             const subscription = yield stripe.subscriptions.retrieve(event.data.object.subscription);
             const newExpirationDate = new Date(subscription.current_period_end * 1000);
             newExpirationDate.setHours(newExpirationDate.getHours() + 1);
@@ -103,6 +110,7 @@ function webhookHandler(req, res) {
                 console.error("Database query error", err);
             }
         }
+        //If invoice payment failed
         else if (event.type === "invoice.payment_failed") {
             const invoice = event.data.object;
             console.log("Invoice payment failed:", invoice.id);
