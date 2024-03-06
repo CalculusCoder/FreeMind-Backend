@@ -33,6 +33,7 @@ const checkTokenResetPassword_1 = require("../controllers/checkTokenResetPasswor
 const getSubscriptionStatus_1 = require("../controllers/getSubscriptionStatus");
 const openAIAPI_1 = require("../controllers/openAIAPI");
 const sendEmail_1 = require("../controllers/sendEmail");
+const verifyUserEmail_1 = require("../controllers/verifyUserEmail");
 const router = express_1.default.Router();
 exports.router = router;
 router.post("/Signin", signin_1.loginHandler);
@@ -63,6 +64,7 @@ router.post("/GetSubscriptionStatus", getSubscriptionStatus_1.getSubscriptionSta
 router.post("/Api-Chat", openAIAPI_1.getCompletion);
 router.post("/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhookHandler);
 router.post("/send-emails", sendEmail_1.sendEmails);
+router.post("/verifyEmail", verifyUserEmail_1.verifyUserEmail);
 // Post Related Endpoints:
 //DONE GET /topics/{topicId}/posts - Get all posts for a specific topic
 //DONE POST /topics/{topicId}/posts - Create a new post for a specific topic

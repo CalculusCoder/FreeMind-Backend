@@ -40,6 +40,7 @@ const Yup = __importStar(require("yup"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const mail_1 = __importDefault(require("@sendgrid/mail"));
 const db_1 = require("../db/db");
+const uuid_1 = require("uuid");
 const userSchema = Yup.object().shape({
     fullName: Yup.string().required(),
     forumUserName: Yup.string()
@@ -63,12 +64,19 @@ function registerHandler(req, res) {
                 password,
             });
             const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+            const verificationToken = (0, uuid_1.v4)();
             const QueryStatement = {
-                text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password) VALUES ($1::text, $2::text, $3::text, $4::text)',
-                values: [email, fullName, forumUserName, hashedPassword],
+                text: 'INSERT INTO "Freemind".users (Email, fullName, username, Password, verification_token) VALUES ($1::text, $2::text, $3::text, $4::text, $5::text) RETURNING id',
+                values: [
+                    email,
+                    fullName,
+                    forumUserName,
+                    hashedPassword,
+                    verificationToken,
+                ],
             };
-            yield (0, db_1.queryDB)(QueryStatement);
-            console.log("User registered successfully");
+            const result = yield (0, db_1.queryDB)(QueryStatement);
+            const userId = result.rows[0].id;
             const msg = {
                 to: "jaredgomez0812@gmail.com",
                 from: process.env.GOOGLE_EMAIL,
@@ -80,11 +88,30 @@ function registerHandler(req, res) {
             };
             try {
                 yield mail_1.default.send(msg);
-                console.log("Email sent");
+                // https://www.freemindrecovery.com
+                //switch to http://localhost:3000 when testing
+                //change to freemind url when finished
+                const verificationUrl = `https://www.freemindrecovery.com/Home/VerifyEmail/?token=${verificationToken}&id=${userId}`;
+                const verificationMsg = {
+                    to: email,
+                    from: "freemindcontact1@gmail.com",
+                    subject: "Verify Your Email",
+                    text: `Please verify your email by clicking on the link: ${verificationUrl}`,
+                };
+                yield mail_1.default.send(verificationMsg);
+                console.log("Emails sent");
             }
             catch (error) {
                 console.error(error);
             }
+            // const verificationUrl = `https://yourwebsite.com/verify?token=${verificationToken}`;
+            // const verificationMsg = {
+            //   to: email, // Send to the user's email
+            //   from: process.env.GOOGLE_EMAIL as string,
+            //   subject: "Verify Your Email",
+            //   text: `Please verify your email by clicking on the link: ${verificationUrl}`,
+            // };
+            // await sgMail.send(verificationMsg);
             res.json({ message: "Registration successful" });
         }
         catch (error) {

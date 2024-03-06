@@ -1,11 +1,11 @@
 "use strict";
 // export {};
 // export const db = {
-//   connectionString: process.env.DATABASE_URL,
+//   connectionString: "postgresql://postgres:Emanuel12@localhost:5432/freemind",
 //   ssl: false,
 //   user: "postgres",
 //   password: "Emanuel12",
-//   database: "postgres",
+//   database: "freemind",
 //   host: "localhost",
 //   port: 5432,
 // };

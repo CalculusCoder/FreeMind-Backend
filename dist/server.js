@@ -47,6 +47,7 @@ const corsOptions = {
     origin: ["http://localhost:3000", "https://www.freemindrecovery.com"],
     credentials: true,
 };
+app.use(express.static("images"));
 app.use((0, cors_1.default)(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({

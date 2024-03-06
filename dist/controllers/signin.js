@@ -29,6 +29,10 @@ function loginHandler(req, res) {
                     });
                     return;
                 }
+                if (user.is_verified === false) {
+                    res.status(400).json({ error: "User email not verified" });
+                    return;
+                }
                 const isMatch = yield bcrypt.compare(password, user.password);
                 if (isMatch) {
                     res.json({
