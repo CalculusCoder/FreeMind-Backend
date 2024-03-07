@@ -1,30 +1,30 @@
-export {};
-export const db = {
-  connectionString: "postgresql://postgres:Emanuel12@localhost:5432/freemind",
-  ssl: false,
-  user: "postgres",
-  password: "Emanuel12",
-  database: "freemind",
-  host: "localhost",
-  port: 5432,
-};
+// export {};
+// export const db = {
+//   connectionString: "postgresql://postgres:Emanuel12@localhost:5432/freemind",
+//   ssl: false,
+//   user: "postgres",
+//   password: "Emanuel12",
+//   database: "freemind",
+//   host: "localhost",
+//   port: 5432,
+// };
 
-// import { PoolConfig } from "pg";
+import { PoolConfig } from "pg";
 
-// let db: PoolConfig;
+let db: PoolConfig;
 
-// if (process.env.NODE_ENV === "production") {
-//   db = {
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: {
-//       rejectUnauthorized: false,
-//     },
-//   };
-// } else {
-//   db = {
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: false,
-//   };
-// }
+if (process.env.NODE_ENV === "production") {
+  db = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  };
+} else {
+  db = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: false,
+  };
+}
 
-// export { db };
+export { db };
