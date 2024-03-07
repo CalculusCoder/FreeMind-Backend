@@ -24,6 +24,7 @@ if (port == null || port == "") {
 const corsOptions = {
   origin: ["http://localhost:3000", "https://www.freemindrecovery.com"],
   credentials: true,
+  exposedHeaders: ["Content-Disposition"],
 };
 
 app.use(express.static("images"));

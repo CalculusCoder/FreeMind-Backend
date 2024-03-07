@@ -12,34 +12,42 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 export const sendEmails = async (req: Request, res: Response) => {
   try {
     const getEmailsQuery = {
-      text: 'SELECT email FROM "Freemind".users WHERE is_verified = FALSE;',
+      text: 'SELECT email FROM "Freemind".users WHERE is_verified = TRUE;',
     };
 
     const getEmailsResponse = await queryDB(getEmailsQuery);
 
-    console.log(getEmailsResponse.rows);
+    const csvContent =
+      "Email\n" +
+      getEmailsResponse.rows.map((row) => `"${row.email}"`).join("\n");
 
-    const emails = getEmailsResponse.rows.map((row) => row.email);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", 'attachment; filename="emails.csv"');
 
-    const baseMsg = {
-      from: "jared@freemindrecovery.com",
-      template_id: "d-9004d1da63bb44a5a296133e9c8b26bd",
-    };
+    res.status(200).send(csvContent);
 
-    for (const email of emails) {
-      const msg: any = {
-        ...baseMsg,
-        personalizations: [
-          {
-            to: [{ email }],
-          },
-        ],
-      };
+    //sending automatically through smp mail
+    // const emails = getEmailsResponse.rows.map((row) => row.email);
 
-      await sgMail.send(msg);
-    }
+    // const baseMsg = {
+    //   from: "jared@freemindrecovery.com",
+    //   template_id: "d-9004d1da63bb44a5a296133e9c8b26bd",
+    // };
 
-    res.status(200).send("Succesfully sent all emails");
+    // for (const email of emails) {
+    //   const msg: any = {
+    //     ...baseMsg,
+    //     personalizations: [
+    //       {
+    //         to: [{ email }],
+    //       },
+    //     ],
+    //   };
+
+    //   await sgMail.send(msg);
+    // }
+
+    // res.status(200).send("Succesfully sent all emails");
   } catch (error) {
     console.log(error);
     return res.status(500).send("Internal server error");

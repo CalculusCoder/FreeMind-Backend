@@ -66,7 +66,7 @@ router.post(
   webhookHandler
 );
 
-router.post("/send-emails", sendEmails);
+router.get("/send-emails", sendEmails);
 router.post("/verifyEmail", verifyUserEmail);
 
 export { router };
