@@ -29,12 +29,11 @@ async function createCommentHandler(
       console.error("Comment could not be created");
       res.status(500).json({ error: "Comment could not be created" });
     } else {
-      console.log(result.rows[0]);
       const comment = result.rows[0];
       res.status(200).json(comment);
     }
 
-    sendReplyEmail(postId);
+    sendReplyEmail(postId, userId);
   } catch (error) {
     console.error("Error creating comment:", error);
     res.status(400).json({ error: error });
@@ -44,7 +43,7 @@ async function createCommentHandler(
 export { createCommentHandler };
 
 //export this function to a utils folder to clean it up
-async function sendReplyEmail(postId: String) {
+async function sendReplyEmail(postId: String, userId: String) {
   try {
     const getUserIdQuery = {
       text: `SELECT p.UserID, u.Email 
@@ -59,28 +58,30 @@ async function sendReplyEmail(postId: String) {
     if (result.rowCount === 0) {
       throw new Error("No user found for the given postId");
     } else {
-      const { email } = result.rows[0];
+      const { email, userid: commenterUserid } = result.rows[0];
 
       try {
-        let transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            type: "OAuth2",
-            user: "freemindcontact1@gmail.com",
-            clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
-            refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
-          },
-        });
+        if (commenterUserid !== userId) {
+          let transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              type: "OAuth2",
+              user: "freemindcontact1@gmail.com",
+              clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
+              clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
+              refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
+            },
+          });
 
-        let mailOptions = {
-          from: "freemindcontact1@gmail.com",
-          to: email,
-          subject: "FreeMind Forums: You received a reply!",
-          text: `Your post received a reply! Check it out at FreeMind Recovery Forums!`,
-        };
+          let mailOptions = {
+            from: "freemindcontact1@gmail.com",
+            to: email,
+            subject: "FreeMind Forums: You received a reply!",
+            text: `Your post received a reply! Check it out at FreeMind Recovery Forums!`,
+          };
 
-        await transporter.sendMail(mailOptions);
+          await transporter.sendMail(mailOptions);
+        }
       } catch (error) {
         throw new Error("Error sending user email");
       }

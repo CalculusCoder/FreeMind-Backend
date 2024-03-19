@@ -59,11 +59,10 @@ function createCommentHandler(req, res) {
                 res.status(500).json({ error: "Comment could not be created" });
             }
             else {
-                console.log(result.rows[0]);
                 const comment = result.rows[0];
                 res.status(200).json(comment);
             }
-            sendReplyEmail(postId);
+            sendReplyEmail(postId, userId);
         }
         catch (error) {
             console.error("Error creating comment:", error);
@@ -73,7 +72,7 @@ function createCommentHandler(req, res) {
 }
 exports.createCommentHandler = createCommentHandler;
 //export this function to a utils folder to clean it up
-function sendReplyEmail(postId) {
+function sendReplyEmail(postId, userId) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const getUserIdQuery = {
@@ -88,25 +87,27 @@ function sendReplyEmail(postId) {
                 throw new Error("No user found for the given postId");
             }
             else {
-                const { email } = result.rows[0];
+                const { email, userid: commenterUserid } = result.rows[0];
                 try {
-                    let transporter = nodemailer_1.default.createTransport({
-                        service: "gmail",
-                        auth: {
-                            type: "OAuth2",
-                            user: "freemindcontact1@gmail.com",
-                            clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
-                            clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
-                            refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
-                        },
-                    });
-                    let mailOptions = {
-                        from: "freemindcontact1@gmail.com",
-                        to: email,
-                        subject: "FreeMind Forums: You received a reply!",
-                        text: `Your post received a reply! Check it out at FreeMind Recovery Forums!`,
-                    };
-                    yield transporter.sendMail(mailOptions);
+                    if (commenterUserid !== userId) {
+                        let transporter = nodemailer_1.default.createTransport({
+                            service: "gmail",
+                            auth: {
+                                type: "OAuth2",
+                                user: "freemindcontact1@gmail.com",
+                                clientId: process.env.GOOGLE_NODEMAILER_CLIENT_ID,
+                                clientSecret: process.env.GOOGLE_NODEMAILER_SECRET,
+                                refreshToken: process.env.GOOGLE_NODEMAILER_REFRESH_TOKEN,
+                            },
+                        });
+                        let mailOptions = {
+                            from: "freemindcontact1@gmail.com",
+                            to: email,
+                            subject: "FreeMind Forums: You received a reply!",
+                            text: `Your post received a reply! Check it out at FreeMind Recovery Forums!`,
+                        };
+                        yield transporter.sendMail(mailOptions);
+                    }
                 }
                 catch (error) {
                     throw new Error("Error sending user email");
