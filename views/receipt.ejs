@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Receipt</title>
+</head>
+<body>
+    <h2>Receipt</h2>
+    <p>Thanks for your payment!</p>
+
+    <table>
+        <tr>
+            <td>Invoice Number:</td>
+            <td><%= receipt.number %></td>
+        </tr>
+        <tr>
+            <td>Date:</td>
+            <td><%= new Date(receipt.created * 1000).toLocaleDateString() %></td>
+        </tr>
+        <tr>
+            <td>Description:</td>
+            <td><%= receipt.lines.data[0].description %></td>
+        </tr>
+        <tr>
+            <td>Amount Paid:</td>
+            <td><%= (receipt.amount_paid / 100).toFixed(2) %></td>
+        </tr>
+        <tr>
+            <td>Currency:</td>
+            <td><%= receipt.currency.toUpperCase() %></td>
+        </tr>
+    </table>
+</body>
+</html>
