@@ -13,4 +13,4 @@ This repository contains the backend code for the FreeMind Recovery application,
 
 ## License
 
-This project is licensed under the Apache License 2.0
+This project is licensed under the GNU General Public License, version 3 (GPLv3)
