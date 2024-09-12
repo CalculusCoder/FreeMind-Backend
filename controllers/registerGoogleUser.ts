@@ -41,8 +41,7 @@ async function registerGoogleUser(req: Request, res: Response): Promise<void> {
     };
 
     try {
-      await sgMail.send(msg);
-      console.log("Email sent");
+      // await sgMail.send(msg);
       res.status(200).json({ user, message: "User registered successfully" });
     } catch (error) {
       console.log(error);
