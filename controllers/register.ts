@@ -85,7 +85,7 @@ async function registerHandler(req: Request, res: Response): Promise<void> {
         text: `Please verify your email by clicking on the link: ${verificationUrl}`,
       };
 
-      // await transporter.sendMail(mailOptions);
+      // await transporter.sendMail(mailOptions); //send mail to personal email
       await transporter.sendMail(userVerificationMailOptions);
     } catch (error) {
       res.status(500).send("Error sending appropriate emails");
